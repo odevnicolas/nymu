@@ -14,6 +14,14 @@ export default function DashboardLayout() {
     return "home";
   };
 
+  // Esconde o TabBar nas telas de notificações, configurações, sobre, termos-versao e documentos
+  const shouldShowTabBar = 
+    !pathname?.includes("notificacoes") && 
+    !pathname?.includes("configuracoes") && 
+    !pathname?.includes("sobre") &&
+    !pathname?.includes("termos-versao") &&
+    !pathname?.includes("documentos");
+
   const tabs = [
     {
       id: "home",
@@ -44,7 +52,9 @@ export default function DashboardLayout() {
       <View style={styles.content}>
         <Slot />
       </View>
-      <TabBar tabs={tabs} activeTab={getActiveTab()} onTabPress={handleTabPress} />
+      {shouldShowTabBar && (
+        <TabBar tabs={tabs} activeTab={getActiveTab()} onTabPress={handleTabPress} />
+      )}
     </View>
   );
 }

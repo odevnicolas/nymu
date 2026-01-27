@@ -1,16 +1,25 @@
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function Home() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.greetingContainer}>
+        <TouchableOpacity 
+          style={styles.greetingContainer}
+          onPress={() => router.push("/dashboard/configuracoes")}
+          activeOpacity={0.7}
+        >
           <Text style={styles.greetingText}>Bom dia!</Text>
           <Text style={styles.userName}>Teste🖐</Text>
-        </View>
+        </TouchableOpacity>
         
-        <TouchableOpacity style={styles.notificationButton} activeOpacity={0.7}>
+        <TouchableOpacity 
+          style={styles.notificationButton} 
+          activeOpacity={0.7}
+          onPress={() => router.push("/dashboard/notificacoes")}
+        >
           <Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
