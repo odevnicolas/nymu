@@ -13,7 +13,9 @@ import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import '../../global.css';
 
+import { UserProvider } from '@/contexts/user-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { setupAuthInterceptor } from '@/lib/api/interceptors';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -29,6 +31,11 @@ export default function RootLayout() {
     Urbanist_600SemiBold,
     Urbanist_700Bold,
   });
+
+  useEffect(() => {
+    // Configurar interceptor de autenticação na inicialização
+    setupAuthInterceptor();
+  }, []);
 
   useEffect(() => {
     // Aguardar até que as rotas e fontes estejam carregadas antes de esconder a splash screen
@@ -51,8 +58,9 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack 
+    <UserProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack 
         screenOptions={{ 
           headerShown: false,
           contentStyle: { backgroundColor: '#FFFFFF' },
@@ -67,6 +75,7 @@ export default function RootLayout() {
         <Stack.Screen name="dashboard" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="auto" />
-    </ThemeProvider>
+      </ThemeProvider>
+    </UserProvider>
   );
 }

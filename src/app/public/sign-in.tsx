@@ -1,13 +1,94 @@
+import { useUser } from "@/contexts/user-context";
+import { login } from "@/lib/api/auth";
+import { saveToken } from "@/lib/storage";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function SignIn() {
-  const [code, setCode] = useState('');
+  const { setUser } = useUser();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  const handleLogin = async () => {
+    // Limpa erro de autenticação ao tentar novamente
+    setAuthError(null);
+
+    // Validação básica
+    if (!email.trim()) {
+      Alert.alert('Erro', 'Por favor, digite seu email');
+      return;
+    }
+
+    if (!password.trim()) {
+      Alert.alert('Erro', 'Por favor, digite sua senha');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const { token, user } = await login(email.trim(), password);
+      
+      // Log para debug: ver o que foi recebido no componente
+      console.log('🔍 [SIGN-IN] Dados recebidos do login:', {
+        token: token ? `${token.substring(0, 20)}...` : 'não recebido',
+        user: user || 'não recebido',
+      });
+      
+      // Salvar token no storage (se falhar, não impede o login)
+      try {
+        await saveToken(token);
+      } catch (storageError) {
+        const msg = storageError instanceof Error ? storageError.message : String(storageError);
+        console.warn('Falha ao salvar token, seguindo sem persistir:', msg);
+      }
+      
+      // Salvar dados do usuário no contexto
+      setUser(user);
+      
+      // Navegar para o dashboard após login bem-sucedido
+      router.replace('/dashboard/' as any);
+    } catch (error) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Erro ao fazer login. Tente novamente.';
+
+      const normalized = errorMessage.toLowerCase();
+
+      // Erro de storage não deve marcar credenciais como inválidas
+      if (normalized.includes('storage não configurado')) {
+        Alert.alert(
+          'Configurar armazenamento',
+          'Para salvar o login de forma segura, instale:\n\n- expo-secure-store (recomendado)\nou\n- @react-native-async-storage/async-storage'
+        );
+        return;
+      }
+
+      // Erro de conexão / rede
+      if (
+        normalized.includes('conexão') ||
+        normalized.includes('network request failed') ||
+        normalized.includes('failed to fetch') ||
+        normalized.includes('networkerror')
+      ) {
+        Alert.alert(
+          'Erro de conexão',
+          'Não foi possível conectar ao servidor.\n\nVerifique:\n- Se o backend está rodando\n- Se o IP/porta da API está correto\n- Se o iPhone está na mesma rede Wi-Fi'
+        );
+        return;
+      }
+
+      // Qualquer outro erro tratamos como credenciais inválidas
+      setAuthError('Email ou senha incorretos.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -37,25 +118,34 @@ export default function SignIn() {
           </View>
 
           <View style={styles.buttonsContainer}>
-            <View style={styles.codeInputContainer}>
+            <View style={[styles.codeInputContainer, authError && styles.inputErrorBorder]}>
             <Ionicons name="mail-outline" size={20} color="#6B7280" style={styles.inputIcon} />
               <TextInput
-                style={styles.codeInput}
+                style={[styles.codeInput, authError && styles.inputErrorText]}
                 placeholder="Digite aqui seu email"
-                value={code}
-                onChangeText={setCode}
+                value={email}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  if (authError) setAuthError(null);
+                }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
                 placeholderTextColor="#9CA3AF"
               />
             </View>
             <View style={styles.inputWrapper}>
               <Text style={styles.inputLabel}>Digite sua senha</Text>
-              <View style={styles.inputContainer}>
+              <View style={[styles.inputContainer, authError && styles.inputErrorBorder]}>
                 <Ionicons name="lock-closed-outline" size={20} color="#6B7280" style={styles.inputIcon} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, authError && styles.inputErrorText]}
                   placeholder="••••••••"
                   value={password}
-                  onChangeText={setPassword}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    if (authError) setAuthError(null);
+                  }}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
                   placeholderTextColor="#9CA3AF"
@@ -75,14 +165,20 @@ export default function SignIn() {
 
             <View style={styles.codeActionsContainer}>
               <Text style={styles.forgotCodeText}>Esqueci minha senha. Recuperar senha!</Text>
+              {authError && (
+                <Text style={styles.authErrorText}>{authError}</Text>
+              )}
               
               <View style={styles.codeButtonsContainer}>
                 <TouchableOpacity 
-                  style={styles.primaryButton}
+                  style={[styles.primaryButton, isLoading && styles.primaryButtonDisabled]}
                   activeOpacity={0.8}
-                  onPress={() => router.push('/dashboard/' as any)}
+                  onPress={handleLogin}
+                  disabled={isLoading}
                 >
-                  <Text style={styles.primaryButtonText}>Fazer login</Text>
+                  <Text style={styles.primaryButtonText}>
+                    {isLoading ? 'Entrando...' : 'Fazer login'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -207,6 +303,12 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 15,
   },
+  authErrorText: {
+    marginTop: 8,
+    fontSize: 14,
+    fontFamily: 'Urbanist_400Regular',
+    color: '#EF4444',
+  },
   backButton: {
     position: 'absolute',
     top: 50,
@@ -241,5 +343,14 @@ const styles = StyleSheet.create({
   },
   eyeIcon: {
     padding: 4,
+  },
+  primaryButtonDisabled: {
+    opacity: 0.6,
+  },
+  inputErrorBorder: {
+    borderBottomColor: '#EF4444',
+  },
+  inputErrorText: {
+    color: '#EF4444',
   },
 });

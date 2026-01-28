@@ -29,6 +29,13 @@
           "resizeMode": "contain",
           "backgroundColor": "#FFFFFF"
         }
+      ],
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O app precisa de acesso às suas fotos para você poder escolher uma foto de perfil."
+        }
       ]
     ],
     "experiments": {
@@ -39,7 +46,8 @@
       "router": {},
       "eas": {
         "projectId": "87ad6ef0-6ee0-4331-aa36-f83069343cd3"
-      }
+      },
+      "apiUrl": "http://172.20.10.2:3000"
     },
     "owner": "mihiirdev",
     "updates": {

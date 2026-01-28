@@ -1,8 +1,23 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useUser } from "@/contexts/user-context";
+import { getShortName } from "@/utils/user";
 
 export default function Home() {
+  const { user } = useUser();
+  
+  // Função para obter saudação baseada na hora
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Bom dia';
+    if (hour < 18) return 'Boa tarde';
+    return 'Boa noite';
+  };
+  
+  // Primeiro e segundo nome do usuário
+  const shortName = getShortName(user);
+  
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -11,8 +26,8 @@ export default function Home() {
           onPress={() => router.push("/dashboard/configuracoes")}
           activeOpacity={0.7}
         >
-          <Text style={styles.greetingText}>Bom dia!</Text>
-          <Text style={styles.userName}>Teste🖐</Text>
+          <Text style={styles.greetingText}>{getGreeting()}!</Text>
+          <Text style={styles.userName}>{shortName}🖐</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 

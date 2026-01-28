@@ -1,8 +1,21 @@
+import { useUser } from "@/contexts/user-context";
+import { getFirstName, getShortName } from "@/utils/user";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function Configuracoes() {
+  const { user, logout } = useUser();
+  
+  const handleLogout = async () => {
+    await logout();
+    router.replace('/public/login' as any);
+  };
+  
+  const shortName = getShortName(user);
+  const firstLetter = getFirstName(user).charAt(0).toUpperCase();
+  const avatarUri = user?.foto || user?.avatar;
+  
   return (
     <View style={styles.container}>
       {/* Header com círculo e nome */}
@@ -16,15 +29,31 @@ export default function Configuracoes() {
         </TouchableOpacity>
 
         <View style={styles.profileSection}>
-          <View style={styles.avatar} />
-          <Text style={styles.userName}>Teste</Text>
+          <View style={styles.avatar}>
+            {avatarUri ? (
+              <Image 
+                source={{ uri: avatarUri }} 
+                style={styles.avatarImage}
+              />
+            ) : (
+              <Text style={styles.avatarText}>{firstLetter}</Text>
+            )}
+          </View>
+          <Text style={styles.userName}>{shortName}</Text>
+          {user?.email && (
+            <Text style={styles.userEmail}>{user.email}</Text>
+          )}
         </View>
       </View>
 
       {/* Lista de opções */}
       <ScrollView style={styles.content}>
         <View style={styles.menuList}>
-          <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
+          <TouchableOpacity 
+            style={styles.menuItem} 
+            activeOpacity={0.7}
+            onPress={() => router.push("/dashboard/perfil")}
+          >
             <Ionicons name="person-outline" size={20} color="#1F2937" />
             <Text style={styles.menuText}>Perfil</Text>
             <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
@@ -74,7 +103,11 @@ export default function Configuracoes() {
         </View>
 
         {/* Botão de sair */}
-        <TouchableOpacity style={styles.logoutButton} activeOpacity={0.7}>
+        <TouchableOpacity 
+          style={styles.logoutButton} 
+          activeOpacity={0.7}
+          onPress={handleLogout}
+        >
           <Ionicons name="log-out-outline" size={20} color="#1F2937" />
           <Text style={styles.logoutText}>Sair do aplicativo</Text>
         </TouchableOpacity>
@@ -94,6 +127,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     paddingHorizontal: 24,
     alignItems: "center",
+    justifyContent: "center",
   },
   closeButton: {
     position: "absolute",
@@ -113,11 +147,31 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     backgroundColor: "#FAB41B",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  avatarImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+  },
+  avatarText: {
+    fontSize: 32,
+    fontFamily: "Urbanist_700Bold",
+    color: "#000000",
   },
   userName: {
     fontSize: 20,
     fontFamily: "Urbanist_600SemiBold",
     color: "#FFFFFF",
+    textAlign: "center",
+  },
+  userEmail: {
+    fontSize: 14,
+    fontFamily: "Urbanist_400Regular",
+    color: "#E5E7EB",
+    marginTop: -8,
   },
   content: {
     flex: 1,
