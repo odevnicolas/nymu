@@ -14,14 +14,15 @@ export default function DashboardLayout() {
     return "home";
   };
 
-  // Esconde o TabBar nas telas de notificações, configurações, perfil, sobre, termos-versao e documentos
+  // Esconde o TabBar nas telas de notificações, configurações, perfil, sobre, termos-versao, documentos e glossario
   const shouldShowTabBar = 
     !pathname?.includes("notificacoes") && 
     !pathname?.includes("configuracoes") && 
     !pathname?.includes("perfil") &&
     !pathname?.includes("sobre") &&
     !pathname?.includes("termos-versao") &&
-    !pathname?.includes("documentos");
+    !pathname?.includes("documentos") &&
+    !pathname?.includes("glossario");
 
   const tabs = [
     {

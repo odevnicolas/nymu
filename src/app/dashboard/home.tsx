@@ -82,7 +82,11 @@ export default function Home() {
             <Text style={styles.buttonText}>Documentos</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionButton} activeOpacity={0.7}>
+          <TouchableOpacity 
+            style={styles.actionButton} 
+            activeOpacity={0.7}
+            onPress={() => router.push("/dashboard/glossario")}
+          >
             <Ionicons name="help-circle-outline" size={24} color="#000000" />
             <Text style={styles.buttonText}>Glossário</Text>
           </TouchableOpacity>
