@@ -1,18 +1,118 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useState } from "react";
-import { Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Animated, Dimensions, Easing, Image, Keyboard, KeyboardAvoidingView, Modal, PanResponder, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function CodeLogin() {
   const [code, setCode] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const keyboardDidHideListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        // Resetar scroll para o topo quando o teclado fechar
+        scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+      }
+    );
+
+    return () => {
+      keyboardDidHideListener.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (modalVisible) {
+      // Animar o bottom sheet para cima com animação mais suave
+      Animated.parallel([
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 40,
+          friction: 8,
+        }),
+        Animated.timing(overlayOpacity, {
+          toValue: 1,
+          duration: 400,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      // Animar o bottom sheet para baixo com animação mais suave
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: SCREEN_HEIGHT,
+          duration: 400,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(overlayOpacity, {
+          toValue: 0,
+          duration: 400,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [modalVisible]);
+
+  const closeModal = () => {
+    setModalVisible(false);
+  };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return gestureState.dy > 10;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) {
+          slideAnim.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 100 || gestureState.vy > 0.5) {
+          // Animar suavemente para fechar
+          Animated.timing(slideAnim, {
+            toValue: SCREEN_HEIGHT,
+            duration: 400,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }).start(() => {
+            closeModal();
+          });
+        } else {
+          // Animar suavemente de volta para a posição inicial
+          Animated.spring(slideAnim, {
+            toValue: 0,
+            useNativeDriver: true,
+            tension: 40,
+            friction: 8,
+          }).start();
+        }
+      },
+    })
+  ).current;
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
       <ScrollView 
+        ref={scrollViewRef}
         style={styles.scrollView} 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.logoContainer}>
           <Image 
@@ -80,64 +180,89 @@ export default function CodeLogin() {
         <Ionicons name="arrow-back" size={24} color="#2D3648" />
       </TouchableOpacity>
 
-      {/* Modal de solicitação de código */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
+      {/* Bottom Sheet de solicitação de código */}
+      {modalVisible && (
+        <Modal
+          transparent={true}
+          visible={modalVisible}
+          animationType="none"
+          onRequestClose={closeModal}
+        >
+          <Animated.View 
+            style={[
+              styles.bottomSheetOverlay,
+              { opacity: overlayOpacity }
+            ]}
+          >
             <TouchableOpacity 
-              style={styles.closeButton}
-              onPress={() => setModalVisible(false)}
-              activeOpacity={0.8}
+              style={styles.overlayTouchable}
+              activeOpacity={1}
+              onPress={closeModal}
+            />
+            <Animated.View
+              style={[
+                styles.bottomSheetContainer,
+                {
+                  transform: [{ translateY: slideAnim }],
+                },
+              ]}
+              {...panResponder.panHandlers}
             >
-              <Ionicons name="close" size={24} color="#2D3648" />
-            </TouchableOpacity>
+              {/* Handle bar */}
+              <View style={styles.handleBar} />
+              
+              <View style={styles.bottomSheetContent}>
+                <TouchableOpacity 
+                  style={styles.closeButton}
+                  onPress={closeModal}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="close" size={24} color="#2D3648" />
+                </TouchableOpacity>
 
-            <Text style={styles.modalTitle}>Solicitação de código</Text>
-            
-            <Text style={styles.modalSubtitle}>
-              Para solicitar seu código de acesso é necessário entrar em contato conosco para fazer a solicitação!
-            </Text>
-            
-            <Text style={styles.modalSubtitle}>
-              Escolha o meio de comunicação abaixo:
-            </Text>
+                <Text style={styles.modalTitle}>Solicitação de código</Text>
+                
+                <Text style={styles.modalSubtitle}>
+                  Para solicitar seu código de acesso é necessário entrar em contato conosco para fazer a solicitação!
+                </Text>
+                
+                <Text style={styles.modalSubtitle}>
+                  Escolha o meio de comunicação abaixo:
+                </Text>
 
-            <View style={styles.socialIconsContainer}>
-              <TouchableOpacity style={styles.socialItem} activeOpacity={0.8}>
-                <Image 
-                  source={require('@/assets/images/instagramIcon.png')}
-                  style={styles.socialIcon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.socialText}>Instagram</Text>
-              </TouchableOpacity>
+                <View style={styles.socialIconsContainer}>
+                  <TouchableOpacity style={styles.socialItem} activeOpacity={0.8}>
+                    <Image 
+                      source={require('@/assets/images/instagramIcon.png')}
+                      style={styles.socialIcon}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.socialText}>Instagram</Text>
+                  </TouchableOpacity>
 
-              <TouchableOpacity style={styles.socialItem} activeOpacity={0.8}>
-                <Image 
-                  source={require('@/assets/images/whatsappIcon.png')}
-                  style={styles.socialIcon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.socialText}>Whatsapp</Text>
-              </TouchableOpacity>
-            </View>
+                  <TouchableOpacity style={styles.socialItem} activeOpacity={0.8}>
+                    <Image 
+                      source={require('@/assets/images/whatsappIcon.png')}
+                      style={styles.socialIcon}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.socialText}>Whatsapp</Text>
+                  </TouchableOpacity>
+                </View>
 
-            <TouchableOpacity 
-              style={styles.modalButton}
-              activeOpacity={0.8}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.modalButtonText}>Entrar em contato e solicitar código!</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-    </View>
+                <TouchableOpacity 
+                  style={styles.modalButton}
+                  activeOpacity={0.8}
+                  onPress={closeModal}
+                >
+                  <Text style={styles.modalButtonText}>Entrar em contato e solicitar código!</Text>
+                </TouchableOpacity>
+              </View>
+            </Animated.View>
+          </Animated.View>
+        </Modal>
+      )}
+    </KeyboardAvoidingView>
   );
 }
 
@@ -150,7 +275,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 100,
   },
   logoContainer: {
     alignItems: 'center',
@@ -172,6 +297,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
+    marginTop: -50,
   },
   welcomeText: {
     fontSize: 24,
@@ -257,19 +383,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modalOverlay: {
+  bottomSheetOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
+    justifyContent: 'flex-end',
   },
-  modalContainer: {
+  overlayTouchable: {
+    flex: 1,
+  },
+  bottomSheetContainer: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 4,
-    padding: 24,
-    width: '100%',
-    maxWidth: 400,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 12,
+    paddingBottom: 40,
+    maxHeight: SCREEN_HEIGHT * 0.85,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  handleBar: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#D1D5DB',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  bottomSheetContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 24,
     position: 'relative',
   },
   closeButton: {

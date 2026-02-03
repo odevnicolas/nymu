@@ -31,18 +31,15 @@ export default function Onboarding() {
     if (currentIndex < ONBOARDING_DATA.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      // Navega para a tela de login quando terminar o onboarding
       router.push('/public/login');
     }
   };
 
   const currentItem = ONBOARDING_DATA[currentIndex];
-  // Define o alinhamento da linha amarela baseado no slide
   const lineAlignment = currentIndex === 0 ? 'flex-start' : currentIndex === 1 ? 'center' : 'flex-end';
 
   return (
     <View style={styles.container}>
-      {/* Conteúdo do slide atual */}
       <View style={styles.slideContainer}>
         <View style={styles.imageContainer}>
           <Image 
@@ -65,7 +62,6 @@ export default function Onboarding() {
         </View>
       </View>
 
-      {/* Botão próximo - posicionado no centro inferior */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           onPress={handleNext}
@@ -108,19 +104,19 @@ const styles = StyleSheet.create({
   yellowLine: {
     width: 80,
     height: 4,
-    backgroundColor: '#FDB813', // nymu-yellow
+    backgroundColor: '#FDB813',
   },
   title: {
     fontSize: 32,
     fontFamily: 'Urbanist_700Bold',
-    color: '#2D3648', // nymu-dark
+    color: '#2D3648',
     marginBottom: 16,
     lineHeight: 38,
   },
   description: {
     fontSize: 16,
     fontFamily: 'Urbanist_400Regular',
-    color: '#6B7280', // gray-600
+    color: '#6B7280',
     lineHeight: 24,
   },
   buttonContainer: {
@@ -133,7 +129,7 @@ const styles = StyleSheet.create({
   nextButton: {
     width: 64,
     height: 64,
-    backgroundColor: '#2D3648', // nymu-dark
+    backgroundColor: '#2D3648',
     borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',

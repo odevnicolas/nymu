@@ -3,8 +3,8 @@ import { login } from "@/lib/api/auth";
 import { saveToken } from "@/lib/storage";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useState } from "react";
-import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Alert, Image, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function SignIn() {
   const { setUser } = useUser();
@@ -13,6 +13,21 @@ export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    const keyboardDidHideListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        // Resetar scroll para o topo quando o teclado fechar
+        scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+      }
+    );
+
+    return () => {
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   const handleLogin = async () => {
     // Limpa erro de autenticação ao tentar novamente
@@ -91,11 +106,17 @@ export default function SignIn() {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
       <ScrollView 
+        ref={scrollViewRef}
         style={styles.scrollView} 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.logoContainer}>
           <Image 
@@ -194,7 +215,7 @@ export default function SignIn() {
       >
         <Ionicons name="arrow-back" size={24} color="#2D3648" />
       </TouchableOpacity>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -207,7 +228,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 100,
   },
   logoContainer: {
     alignItems: 'center',
@@ -229,6 +250,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
+    marginTop: -50,
   },
   welcomeText: {
     fontSize: 24,
