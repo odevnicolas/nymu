@@ -1,8 +1,8 @@
 import {
-  Urbanist_400Regular,
-  Urbanist_500Medium,
-  Urbanist_600SemiBold,
-  Urbanist_700Bold,
+    Urbanist_400Regular,
+    Urbanist_500Medium,
+    Urbanist_600SemiBold,
+    Urbanist_700Bold,
 } from '@expo-google-fonts/urbanist';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
@@ -13,6 +13,8 @@ import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import '../../global.css';
 
+import { NotasFiscaisProvider } from '@/contexts/notas-fiscais-context';
+import { TomadoresProvider } from '@/contexts/tomadores-context';
 import { UserProvider } from '@/contexts/user-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { setupAuthInterceptor } from '@/lib/api/interceptors';
@@ -59,23 +61,27 @@ export default function RootLayout() {
 
   return (
     <UserProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack 
-        screenOptions={{ 
-          headerShown: false,
-          contentStyle: { backgroundColor: '#FFFFFF' },
-          animation: 'fade',
-        }}
-      >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="public/onboarding" />
-        <Stack.Screen name="public/login" />
-        <Stack.Screen name="public/code-login" />
-        <Stack.Screen name="public/sign-up" />
-        <Stack.Screen name="dashboard" options={{ headerShown: false }} />
-      </Stack>
-      <StatusBar style="auto" />
-      </ThemeProvider>
+      <TomadoresProvider>
+        <NotasFiscaisProvider>
+          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <Stack 
+            screenOptions={{ 
+              headerShown: false,
+              contentStyle: { backgroundColor: '#FFFFFF' },
+              animation: 'fade',
+            }}
+          >
+            <Stack.Screen name="index" />
+            <Stack.Screen name="public/onboarding" />
+            <Stack.Screen name="public/login" />
+            <Stack.Screen name="public/code-login" />
+            <Stack.Screen name="public/sign-up" />
+            <Stack.Screen name="dashboard" options={{ headerShown: false }} />
+          </Stack>
+          <StatusBar style="auto" />
+          </ThemeProvider>
+        </NotasFiscaisProvider>
+      </TomadoresProvider>
     </UserProvider>
   );
 }

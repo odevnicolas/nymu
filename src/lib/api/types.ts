@@ -132,3 +132,139 @@ export interface ChangePasswordResponse {
   success: boolean;
   message?: string;
 }
+
+/**
+ * Endereço do tomador
+ */
+export interface Endereco {
+  logradouro: string;
+  numero: string;
+  cep: string;
+  bairro: string;
+  cidade: string;
+  uf: string;
+}
+
+/**
+ * Tomador de serviço (Pessoa Física ou Jurídica)
+ * Estrutura retornada pela API (campos de endereço diretos)
+ */
+export interface Tomador {
+  id: string;
+  tipo: 'PF' | 'PJ';
+  nome: string; // Nome completo (PF) ou Razão Social (PJ)
+  documento: string; // CPF (PF) ou CNPJ (PJ)
+  inscricaoMunicipal?: string; // Apenas para PJ
+  // Campos de endereço (diretos, não aninhados)
+  logradouro: string;
+  numero: string;
+  cep: string;
+  bairro: string;
+  cidade: string;
+  uf: string;
+  telefone?: string;
+  createdAt: Date;
+}
+
+/**
+ * Dados do formulário de cadastro de tomador
+ */
+export interface TomadorFormData {
+  tipo: 'PF' | 'PJ';
+  nome: string;
+  documento: string;
+  inscricaoMunicipal?: string;
+  logradouro: string;
+  numero: string;
+  cep: string;
+  bairro: string;
+  cidade: string;
+  uf: string;
+  telefone?: string;
+}
+
+
+/**
+ * Status da nota fiscal (alinhado com backend - InvoiceStatus enum)
+ */
+export type NotaFiscalStatus = 
+  | 'PROCESSANDO' 
+  | 'EMITIDA' 
+  | 'CANCELADA' 
+  | 'ERRO' 
+  | 'SIMULATED';
+
+/**
+ * Nota Fiscal (alinhado com InvoiceResponseDto do backend)
+ */
+export interface NotaFiscal {
+  id: string;
+  type: 'NFE' | 'NFSE';
+  userId: string;
+  tomadorId?: string;
+  
+  // Dados do serviço
+  serviceDescription: string;
+  serviceValue: number; // valor em centavos
+  issRetention: boolean;
+  observations?: string;
+  
+  // Campos específicos do sistema
+  localPrestacao?: string;
+  competencia?: string; // formato: "MM/YYYY"
+  
+  // Dados desnormalizados do tomador
+  tomadorNome?: string;
+  tomadorDocumento?: string;
+  
+  // Status e controle
+  status: NotaFiscalStatus;
+  emissionMode: 'PRODUCTION' | 'SIMULATED';
+  
+  // Dados da nota emitida
+  invoiceNumber?: string;
+  series?: string;
+  accessKey?: string;
+  verificationCode?: string;
+  protocol?: string;
+  xmlPath?: string;
+  pdfPath?: string;
+  municipality?: string;
+  ufCode?: string;
+  sefazMessage?: string;
+  
+  // Timestamps
+  createdAt: Date;
+  updatedAt: Date;
+  authorizedAt?: Date;
+  cancelledAt?: Date;
+}
+
+/**
+ * Dados do formulário de solicitação de nota fiscal
+ */
+export interface SolicitarNotaFiscalFormData {
+  localPrestacao: string;
+  competencia: string; // formato: "MM/YYYY"
+  valor: number; // valor em centavos
+  descricao: string;
+}
+
+/**
+ * Payload para solicitação de nota fiscal
+ */
+export interface SolicitarNotaFiscalRequest {
+  tomadorId: string;
+  localPrestacao: string;
+  competencia: string; // formato: "MM/YYYY"
+  valor: number; // valor em centavos
+  descricao: string;
+}
+
+/**
+ * Resposta de solicitação de nota fiscal
+ */
+export interface SolicitarNotaFiscalResponse {
+  notaFiscal: NotaFiscal;
+  message?: string;
+}

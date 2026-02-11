@@ -40,6 +40,12 @@ export const apiEndpoints = {
   updateProfile: `${API_URL}/auth/profile`,
   changePassword: `${API_URL}/auth/change-password`,
   
+  // Tomadores
+  tomadores: `${API_URL}/tomadores`,
+  
+  // Notas Fiscais
+  invoices: `${API_URL}/invoices`,
+  
   // CNPJ
   cnpjRequest: `${API_URL}/api/cnpj-request`,
 } as const;

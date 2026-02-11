@@ -1,11 +1,30 @@
+import { useNotasFiscais } from "@/contexts/notas-fiscais-context";
+import { useUser } from "@/contexts/user-context";
+import { formatCurrency } from "@/utils/formatters";
+import { getShortName } from "@/utils/user";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useUser } from "@/contexts/user-context";
-import { getShortName } from "@/utils/user";
+
+const STATUS_COLORS: Record<string, string> = {
+  PROCESSANDO: '#3B82F6',
+  EMITIDA: '#10B981',
+  CANCELADA: '#6B7280',
+  ERRO: '#EF4444',
+  SIMULATED: '#F59E0B',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  PROCESSANDO: 'Processando',
+  EMITIDA: 'Emitida',
+  CANCELADA: 'Cancelada',
+  ERRO: 'Erro',
+  SIMULATED: 'Simulada',
+};
 
 export default function Home() {
   const { user } = useUser();
+  const { notasFiscais } = useNotasFiscais();
   
   // Função para obter saudação baseada na hora
   const getGreeting = () => {
@@ -17,6 +36,9 @@ export default function Home() {
   
   // Primeiro e segundo nome do usuário
   const shortName = getShortName(user);
+  
+  // Últimas 3 notas fiscais
+  const ultimasNotas = notasFiscais.slice(0, 3);
   
   return (
     <View style={styles.container}>
@@ -60,18 +82,25 @@ export default function Home() {
         </View>
       </View>
 
-      {/* Botões horizontais scrolláveis */}
+      {/* Botão Solicitar NF centralizado */}
+      <View style={styles.mainActionContainer}>
+        <TouchableOpacity 
+          style={styles.mainActionButton} 
+          activeOpacity={0.7}
+          onPress={() => router.push("/dashboard/nota-fiscal")}
+        >
+          <Ionicons name="add-circle" size={28} color="#FFFFFF" />
+          <Text style={styles.mainActionText}>Solicitar Nota Fiscal</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Botões secundários */}
       <View style={styles.buttonsContainer}>
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          <TouchableOpacity style={styles.actionButton} activeOpacity={0.7}>
-            <Ionicons name="document-text-outline" size={24} color="#000000" />
-            <Text style={styles.buttonText}>Solicitar NF</Text>
-          </TouchableOpacity>
-
           <TouchableOpacity style={styles.actionButton} activeOpacity={0.7}>
             <Ionicons name="folder-open-outline" size={24} color="#000000" />
             <Text style={styles.buttonText}>Certidões Negativas</Text>
@@ -95,46 +124,64 @@ export default function Home() {
 
       {/* Seção Últimas NF Emitidas */}
       <View style={styles.nfSection}>
-        <Text style={styles.sectionTitle}>Últimas NF Emitidas</Text>
-        
-        <View style={styles.nfList}>
-          <View style={styles.nfItem}>
-            <Ionicons name="download-outline" size={24} color="#6B7280" />
-            <View style={styles.nfItemContent}>
-              <View style={styles.nfItemText}>
-                <Text style={styles.nfItemName}>Teste</Text>
-                <Text style={styles.nfItemDate}>Emitida em 15/01/2026</Text>
-              </View>
-              <Text style={styles.nfItemValue}>R$ 0.000,00</Text>
-            </View>
-          </View>
-
-          <View style={styles.nfDivider} />
-
-          <View style={styles.nfItem}>
-            <Ionicons name="download-outline" size={24} color="#6B7280" />
-            <View style={styles.nfItemContent}>
-              <View style={styles.nfItemText}>
-                <Text style={styles.nfItemName}>Teste</Text>
-                <Text style={styles.nfItemDate}>Emitida em 15/01/2026</Text>
-              </View>
-              <Text style={styles.nfItemValue}>R$ 0.000,00</Text>
-            </View>
-          </View>
-
-          <View style={styles.nfDivider} />
-
-          <View style={styles.nfItem}>
-            <Ionicons name="download-outline" size={24} color="#6B7280" />
-            <View style={styles.nfItemContent}>
-              <View style={styles.nfItemText}>
-                <Text style={styles.nfItemName}>Teste</Text>
-                <Text style={styles.nfItemDate}>Emitida em 15/01/2026</Text>
-              </View>
-              <Text style={styles.nfItemValue}>R$ 0.000,00</Text>
-            </View>
-          </View>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Últimas NF Emitidas</Text>
+          {ultimasNotas.length > 0 && (
+            <TouchableOpacity 
+              onPress={() => router.push("/dashboard/minhas-notas")}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.seeAllText}>Ver todas</Text>
+            </TouchableOpacity>
+          )}
         </View>
+        
+        {ultimasNotas.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="document-text-outline" size={48} color="#9CA3AF" />
+            <Text style={styles.emptyStateText}>
+              Você ainda não possui nenhuma nota fiscal emitida
+            </Text>
+            <TouchableOpacity 
+              style={styles.emptyStateButton}
+              onPress={() => router.push("/dashboard/nota-fiscal")}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.emptyStateButtonText}>Solicitar primeira NF</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.nfList}>
+            {ultimasNotas.map((nota, index) => (
+              <View key={nota.id}>
+                {index > 0 && <View style={styles.nfDivider} />}
+                <TouchableOpacity 
+                  style={styles.nfItem}
+                  onPress={() => router.push("/dashboard/minhas-notas")}
+                  activeOpacity={0.7}
+                >
+                  <View style={[
+                    styles.statusDot,
+                    { backgroundColor: STATUS_COLORS[nota.status] || '#6B7280' }
+                  ]} />
+                  <View style={styles.nfItemContent}>
+                    <View style={styles.nfItemText}>
+                      <Text style={styles.nfItemName} numberOfLines={1}>
+                        {nota.tomadorNome || 'N/A'}
+                      </Text>
+                      <Text style={styles.nfItemDate}>
+                        {nota.createdAt.toLocaleDateString('pt-BR')}
+                      </Text>
+                    </View>
+                    <Text style={styles.nfItemValue}>
+                      {formatCurrency(nota.serviceValue)}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
       </View>
 
       {/* Conteúdo da página */}
@@ -237,12 +284,37 @@ const styles = StyleSheet.create({
     fontFamily: 'Urbanist_700Bold',
     color: '#000000',
   },
-  buttonsContainer: {
-    marginTop: 100,
+  mainActionContainer: {
+    marginTop: 120,
     paddingHorizontal: 24,
     marginBottom: 16,
-    backgroundColor: '#F7F7F7',
-    paddingVertical: 16,
+  },
+  mainActionButton: {
+    backgroundColor: '#333333',
+    borderRadius: 12,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  mainActionText: {
+    fontSize: 16,
+    fontFamily: 'Urbanist_700Bold',
+    color: '#FFFFFF',
+  },
+  buttonsContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 16,
   },
   scrollContent: {
     gap: 12,
@@ -264,14 +336,53 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   nfSection: {
-    marginTop: 30,
+    marginTop: 24,
     paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
     fontFamily: 'Urbanist_700Bold',
     color: '#000000',
+  },
+  seeAllText: {
+    fontSize: 14,
+    fontFamily: 'Urbanist_600SemiBold',
+    color: '#333333',
+  },
+  emptyState: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 32,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderStyle: 'dashed',
+  },
+  emptyStateText: {
+    fontSize: 14,
+    fontFamily: 'Urbanist_500Medium',
+    color: '#6B7280',
+    textAlign: 'center',
+    marginTop: 12,
     marginBottom: 16,
+  },
+  emptyStateButton: {
+    backgroundColor: '#333333',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  emptyStateButtonText: {
+    fontSize: 13,
+    fontFamily: 'Urbanist_600SemiBold',
+    color: '#FFFFFF',
   },
   nfList: {
     backgroundColor: '#FFFFFF',
@@ -283,6 +394,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     gap: 12,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   nfItemContent: {
     flex: 1,

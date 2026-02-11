@@ -36,7 +36,8 @@
         {
           "photosPermission": "O app precisa de acesso às suas fotos para você poder escolher uma foto de perfil."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,

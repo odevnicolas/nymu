@@ -1,11 +1,12 @@
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useState, useEffect } from "react";
-import { Alert, Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { SucessoModal } from "@/components/sucesso-modal";
 import { useUser } from "@/contexts/user-context";
-import { updateProfile, changePassword } from "@/lib/api/auth";
+import { changePassword, updateProfile } from "@/lib/api/auth";
 import { getUserName } from "@/utils/user";
+import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from 'expo-image-picker';
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
+import { Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function Perfil() {
   const { user, setUser } = useUser();
@@ -27,6 +28,9 @@ export default function Perfil() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  
+  // Estado para modal de sucesso
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const formatPhone = (text: string) => {
     const numbers = text.replace(/\D/g, '');
@@ -67,7 +71,6 @@ export default function Perfil() {
       // Solicitar permissão
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permissão necessária', 'Precisamos de permissão para acessar suas fotos.');
         return;
       }
 
@@ -77,7 +80,7 @@ export default function Perfil() {
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
-        base64: true, // Solicitar base64 diretamente
+        base64: true,
       });
 
       if (!result.canceled && result.assets[0]) {
@@ -112,35 +115,25 @@ export default function Perfil() {
       }
     } catch (error) {
       console.error('Erro ao selecionar imagem:', error);
-      Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
     }
   };
 
   const handleSave = async () => {
     if (!user) {
-      Alert.alert('Erro', 'Usuário não encontrado');
       return;
     }
 
     if (!nome.trim()) {
-      Alert.alert('Erro', 'Nome completo é obrigatório');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // TODO: Se houver avatarUri, fazer upload da imagem primeiro
-      // Por enquanto, vamos apenas salvar a URI local
-      // O backend precisará de um endpoint para upload de imagem
-      
-      // O backend espera os campos diretamente, sem wrapper "user"
-      // Se houver uma nova foto selecionada (base64), usar ela; caso contrário, manter a foto existente
       const fotoParaEnviar = avatarBase64 
         ? `data:image/jpeg;base64,${avatarBase64}` 
         : (user.foto || user.avatar || undefined);
       
-      // Limpar telefone: remover formatação antes de enviar ao backend
       const telefoneLimpo = telefone.trim() 
         ? cleanPhone(telefone.trim()) 
         : undefined;
@@ -151,51 +144,41 @@ export default function Perfil() {
         foto: fotoParaEnviar,
       });
 
-      // Atualizar dados do usuário no contexto
       setUser(response.user);
       
-      // Atualizar avatarUri com a foto retornada do backend
       if (response.user.foto || response.user.avatar) {
         setAvatarUri(response.user.foto || response.user.avatar || null);
-        // Limpar base64 já que a foto foi salva no backend
         setAvatarBase64(null);
       }
 
-      Alert.alert('Sucesso', 'Perfil atualizado com sucesso!', [
-        {
-          text: 'OK',
-          onPress: () => router.back(),
-        },
-      ]);
+      // Mostrar modal de sucesso
+      setShowSuccessModal(true);
+      
+      // Voltar após o modal fechar
+      setTimeout(() => {
+        router.back();
+      }, 2000);
     } catch (error) {
       const errorMessage = error instanceof Error 
         ? error.message 
         : 'Erro ao atualizar perfil. Tente novamente.';
       
-      Alert.alert('Erro', errorMessage);
+      console.error('Erro ao salvar:', errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleChangePassword = async () => {
-    if (!currentPassword.trim()) {
-      Alert.alert('Erro', 'Digite sua senha atual');
-      return;
-    }
-
-    if (!newPassword.trim()) {
-      Alert.alert('Erro', 'Digite a nova senha');
+    if (!currentPassword.trim() || !newPassword.trim()) {
       return;
     }
 
     if (newPassword.length < 6) {
-      Alert.alert('Erro', 'A nova senha deve ter no mínimo 6 caracteres');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      Alert.alert('Erro', 'As senhas não coincidem');
       return;
     }
 
@@ -204,23 +187,15 @@ export default function Perfil() {
     try {
       await changePassword(currentPassword, newPassword);
       
-      Alert.alert('Sucesso', 'Senha alterada com sucesso!', [
-        {
-          text: 'OK',
-          onPress: () => {
-            setShowPasswordModal(false);
-            setCurrentPassword('');
-            setNewPassword('');
-            setConfirmPassword('');
-          },
-        },
-      ]);
-    } catch (error) {
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : 'Erro ao alterar senha. Verifique se a senha atual está correta.';
+      setShowPasswordModal(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
       
-      Alert.alert('Erro', errorMessage);
+      // Mostrar modal de sucesso
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error('Erro ao alterar senha');
     } finally {
       setIsChangingPassword(false);
     }
@@ -462,6 +437,14 @@ export default function Perfil() {
           </View>
         </View>
       </Modal>
+
+      {/* Modal de Sucesso */}
+      <SucessoModal
+        visible={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        titulo="Suas alterações foram salvas com sucesso."
+        mensagem="Mantenha, sempre seus dados atualizados, isso é importante para toda nossa plataforma."
+      />
     </View>
   );
 }

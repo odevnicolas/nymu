@@ -25,3 +25,9 @@ export { setupAuthInterceptor } from './interceptors';
 // Autenticação
 export { changePassword, login, loginRequest, register, updateProfile, validateCode } from './auth';
 
+// Tomadores
+export { createTomador, deleteTomador, getTomadorById, listTomadores, updateTomador } from './tomadores';
+
+// Notas Fiscais
+export { cancelNotaFiscal, createNotaFiscal, downloadPdf, downloadXml, getNotaFiscalById, getPdfUrl, getXmlUrl, listNotasFiscais } from './notas-fiscais';
+

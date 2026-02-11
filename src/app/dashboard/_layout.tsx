@@ -1,7 +1,6 @@
-import { usePathname, useRouter } from "expo-router";
-import { StyleSheet, View } from "react-native";
 import { TabBar } from "@/components/tab-bar";
-import { Slot } from "expo-router";
+import { Slot, usePathname, useRouter } from "expo-router";
+import { StyleSheet, View } from "react-native";
 
 export default function DashboardLayout() {
   const pathname = usePathname();
@@ -9,6 +8,7 @@ export default function DashboardLayout() {
 
   // Determina a tab ativa baseado no pathname
   const getActiveTab = () => {
+    if (pathname?.includes("minhas-notas")) return "minhas-notas";
     if (pathname?.includes("nota-fiscal")) return "nota-fiscal";
     if (pathname?.includes("tributos")) return "tributos";
     return "home";
@@ -33,9 +33,15 @@ export default function DashboardLayout() {
     },
     {
       id: "nota-fiscal",
-      label: "Nota Fiscal",
-      icon: "document-text-outline" as const,
+      label: "Solicitar NF",
+      icon: "add-circle-outline" as const,
       route: "/dashboard/nota-fiscal",
+    },
+    {
+      id: "minhas-notas",
+      label: "Minhas Notas",
+      icon: "document-text-outline" as const,
+      route: "/dashboard/minhas-notas",
     },
     {
       id: "tributos",
