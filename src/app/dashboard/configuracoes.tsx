@@ -68,7 +68,11 @@ export default function Configuracoes() {
             <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            activeOpacity={0.7}
+            onPress={() => router.push("/dashboard/certidoes-negativas")}
+          >
             <Ionicons name="folder-outline" size={20} color="#1F2937" />
             <Text style={styles.menuText}>Certidões Negativas</Text>
             <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
