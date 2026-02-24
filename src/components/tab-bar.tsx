@@ -19,9 +19,8 @@ export function TabBar({ tabs, activeTab, onTabPress }: TabBarProps) {
     <View style={styles.container}>
       <View style={styles.divider} />
       <View style={styles.tabsContainer}>
-        {tabs.map((tab, index) => {
+        {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
-          const isCenter = index === 1; // Nota Fiscal no centro
 
           return (
             <TouchableOpacity
@@ -30,32 +29,21 @@ export function TabBar({ tabs, activeTab, onTabPress }: TabBarProps) {
               onPress={() => onTabPress(tab.route)}
               activeOpacity={0.7}
             >
-              {isCenter ? (
-                // Tab central com círculo laranja destacado
-                <View style={styles.centerTabContainer}>
-                  <View style={styles.centerIconCircle}>
-                    <Ionicons name={tab.icon} size={24} color="#FFFFFF" />
-                  </View>
-                  <Text style={styles.centerTabLabel}>{tab.label}</Text>
-                </View>
-              ) : (
-                // Tabs laterais
-                <View style={styles.sideTabContainer}>
-                  <Ionicons
-                    name={tab.icon}
-                    size={24}
-                    color={isActive ? "#FAB41B" : "#9CA3AF"}
-                  />
-                  <Text
-                    style={[
-                      styles.sideTabLabel,
-                      isActive && styles.sideTabLabelActive,
-                    ]}
-                  >
-                    {tab.label}
-                  </Text>
-                </View>
-              )}
+              <View style={styles.sideTabContainer}>
+                <Ionicons
+                  name={tab.icon}
+                  size={24}
+                  color={isActive ? "#FAB41B" : "#9CA3AF"}
+                />
+                <Text
+                  style={[
+                    styles.sideTabLabel,
+                    isActive && styles.sideTabLabelActive,
+                  ]}
+                >
+                  {tab.label}
+                </Text>
+              </View>
             </TouchableOpacity>
           );
         })}
@@ -90,27 +78,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 4,
   },
-  centerTabContainer: {
-    alignItems: "center",
-    gap: 4,
-    marginTop: -20, // Eleva o círculo acima da linha
-  },
-  centerIconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: "#FAB41B",
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
   sideTabLabel: {
     fontSize: 12,
     fontFamily: "Urbanist_400Regular",
@@ -120,11 +87,5 @@ const styles = StyleSheet.create({
   sideTabLabelActive: {
     color: "#1F2937",
     fontFamily: "Urbanist_500Medium",
-  },
-  centerTabLabel: {
-    fontSize: 12,
-    fontFamily: "Urbanist_400Regular",
-    color: "#9CA3AF",
-    marginTop: 4,
   },
 });

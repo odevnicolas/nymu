@@ -110,6 +110,7 @@ export default function NotaFiscal() {
       descricao: data.descricao,
     });
 
+    setSolicitarNFModalVisible(false);
     setSuccessModalTipo('nota-fiscal');
     setSuccessModalVisible(true);
   };

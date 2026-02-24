@@ -21,9 +21,9 @@ import {
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
   withTiming,
   runOnJS,
+  Easing,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
@@ -81,12 +81,12 @@ export function CadastroTomadorModal({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Animações
+  // Animações (subida suave na abertura, sem bounce)
   useEffect(() => {
     if (visible) {
-      translateY.value = withSpring(0, {
-        damping: 20,
-        stiffness: 150,
+      translateY.value = withTiming(0, {
+        duration: 300,
+        easing: Easing.out(Easing.cubic),
       });
       backdropOpacity.value = withTiming(1, { duration: 200 });
     } else {
@@ -139,7 +139,7 @@ export function CadastroTomadorModal({
       if (event.translationY > MODAL_HEIGHT * 0.3) {
         runOnJS(handleClose)();
       } else {
-        translateY.value = withSpring(0);
+        translateY.value = withTiming(0, { duration: 200 });
       }
     });
 

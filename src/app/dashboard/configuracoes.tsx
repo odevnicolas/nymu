@@ -1,5 +1,5 @@
 import { useUser } from "@/contexts/user-context";
-import { getFirstName, getShortName } from "@/utils/user";
+import { getShortName } from "@/utils/user";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -13,7 +13,6 @@ export default function Configuracoes() {
   };
   
   const shortName = getShortName(user);
-  const firstLetter = getFirstName(user).charAt(0).toUpperCase();
   const avatarUri = user?.foto || user?.avatar;
   
   return (
@@ -36,7 +35,7 @@ export default function Configuracoes() {
                 style={styles.avatarImage}
               />
             ) : (
-              <Text style={styles.avatarText}>{firstLetter}</Text>
+              <Ionicons name="person" size={40} color="#000000" />
             )}
           </View>
           <Text style={styles.userName}>{shortName}</Text>
@@ -85,11 +84,11 @@ export default function Configuracoes() {
             <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
+          {/* <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
             <Ionicons name="help-circle-outline" size={20} color="#1F2937" />
             <Text style={styles.menuText}>Ajuda e Feedback</Text>
             <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <TouchableOpacity 
             style={styles.menuItem} 
@@ -155,11 +154,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-  },
-  avatarText: {
-    fontSize: 32,
-    fontFamily: "Urbanist_700Bold",
-    color: "#000000",
   },
   userName: {
     fontSize: 20,
