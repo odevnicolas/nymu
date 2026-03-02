@@ -5,7 +5,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { NotaFiscal, NotaFiscalStatus } from '@/lib/api/types';
 import * as notasFiscaisAPI from '@/lib/api/notas-fiscais';
-import { getToken } from '@/lib/storage';
+import { getToken, removeToken } from '@/lib/storage';
 
 interface NotasFiscaisContextData {
   notasFiscais: NotaFiscal[];
@@ -45,8 +45,13 @@ export function NotasFiscaisProvider({ children }: { children: React.ReactNode }
       const response = await notasFiscaisAPI.listNotasFiscais();
       setNotasFiscais(response.invoices);
     } catch (error) {
-      console.error('Erro ao carregar notas fiscais:', error);
-      // Não lançar erro para não quebrar o app
+      const is401 = error instanceof Error && error.message.includes('401');
+      if (is401) {
+        // Token expirado: limpar do storage silenciosamente
+        await removeToken();
+      } else {
+        console.error('Erro ao carregar notas fiscais:', error);
+      }
     } finally {
       setIsLoading(false);
     }

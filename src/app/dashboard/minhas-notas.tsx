@@ -258,14 +258,17 @@ const styles = StyleSheet.create({
   statsCard: {
     backgroundColor: '#FAB41B',
     borderRadius: 10,
-    padding: 20,
+    padding: 12,
     flexDirection: 'row',
-    gap: 16,
+    gap: 12,
   },
   statItem: {
     flex: 1,
     alignItems: 'center',
     gap: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 12,
+    padding: 16,
   },
   statLabel: {
     fontSize: 12,

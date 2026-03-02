@@ -20,9 +20,9 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Animated, {
+  Easing,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
   withTiming,
   runOnJS,
 } from 'react-native-reanimated';
@@ -64,10 +64,7 @@ export function SolicitarNFModal({ visible, onClose, onSubmit, tomador }: Solici
   // Animações
   useEffect(() => {
     if (visible) {
-      translateY.value = withSpring(0, {
-        damping: 20,
-        stiffness: 150,
-      });
+      translateY.value = withTiming(0, { duration: 300, easing: Easing.out(Easing.cubic) });
       backdropOpacity.value = withTiming(1, { duration: 200 });
     } else {
       translateY.value = withTiming(MODAL_HEIGHT, { duration: 300 });
@@ -109,7 +106,7 @@ export function SolicitarNFModal({ visible, onClose, onSubmit, tomador }: Solici
       if (event.translationY > MODAL_HEIGHT * 0.3) {
         runOnJS(handleClose)();
       } else {
-        translateY.value = withSpring(0);
+        translateY.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.cubic) });
       }
     });
 

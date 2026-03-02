@@ -5,7 +5,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Tomador, TomadorFormData } from '@/lib/api/types';
 import * as tomadoresAPI from '@/lib/api/tomadores';
-import { getToken } from '@/lib/storage';
+import { getToken, removeToken } from '@/lib/storage';
 
 interface TomadoresContextData {
   tomadores: Tomador[];
@@ -39,8 +39,13 @@ export function TomadoresProvider({ children }: { children: React.ReactNode }) {
       const response = await tomadoresAPI.listTomadores();
       setTomadores(response.tomadores);
     } catch (error) {
-      console.error('Erro ao carregar tomadores:', error);
-      // Não lançar erro para não quebrar o app
+      const is401 = error instanceof Error && error.message.includes('401');
+      if (is401) {
+        // Token expirado: limpar do storage silenciosamente
+        await removeToken();
+      } else {
+        console.error('Erro ao carregar tomadores:', error);
+      }
     } finally {
       setIsLoading(false);
     }

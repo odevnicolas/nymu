@@ -187,13 +187,17 @@ export default function NotaFiscal() {
         {/* Cards de Contadores */}
         <View style={styles.cardsContainer}>
           <View style={styles.counterCard}>
-            <Text style={styles.counterLabel}>Tomadores PJ</Text>
-            <Text style={styles.counterValue}>0</Text>
+            <View style={styles.counterInner}>
+              <Text style={styles.counterLabel}>Tomadores PJ</Text>
+              <Text style={styles.counterValue}>0</Text>
+            </View>
           </View>
 
           <View style={styles.counterCard}>
-            <Text style={styles.counterLabel}>Tomadores PF</Text>
-            <Text style={styles.counterValue}>0</Text>
+            <View style={styles.counterInner}>
+              <Text style={styles.counterLabel}>Tomadores PF</Text>
+              <Text style={styles.counterValue}>0</Text>
+            </View>
           </View>
         </View>
 
@@ -257,13 +261,17 @@ export default function NotaFiscal() {
       {/* Cards de Contadores */}
       <View style={styles.cardsContainer}>
         <View style={styles.counterCard}>
-          <Text style={styles.counterLabel}>Tomadores PJ</Text>
-          <Text style={styles.counterValue}>{tomadoresPJ.length}</Text>
+          <View style={styles.counterInner}>
+            <Text style={styles.counterLabel}>Tomadores PJ</Text>
+            <Text style={styles.counterValue}>{tomadoresPJ.length}</Text>
+          </View>
         </View>
 
         <View style={styles.counterCard}>
-          <Text style={styles.counterLabel}>Tomadores PF</Text>
-          <Text style={styles.counterValue}>{tomadoresPF.length}</Text>
+          <View style={styles.counterInner}>
+            <Text style={styles.counterLabel}>Tomadores PF</Text>
+            <Text style={styles.counterValue}>{tomadoresPF.length}</Text>
+          </View>
         </View>
       </View>
 
@@ -423,7 +431,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FAB41B',
     borderRadius: 10,
-    padding: 20,
+    padding: 10,
+  },
+  counterInner: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 10,
+    padding: 16,
     alignItems: 'center',
     gap: 8,
   },

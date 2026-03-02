@@ -15,9 +15,9 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Animated, {
+  Easing,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
   withTiming,
   runOnJS,
 } from 'react-native-reanimated';
@@ -45,10 +45,7 @@ export function VisualizarDadosModal({ visible, onClose, tomador }: VisualizarDa
   // Animações
   useEffect(() => {
     if (visible) {
-      translateY.value = withSpring(0, {
-        damping: 20,
-        stiffness: 150,
-      });
+      translateY.value = withTiming(0, { duration: 300, easing: Easing.out(Easing.cubic) });
       backdropOpacity.value = withTiming(1, { duration: 200 });
       
       // Buscar dados completos do tomador
@@ -87,7 +84,7 @@ export function VisualizarDadosModal({ visible, onClose, tomador }: VisualizarDa
       if (event.translationY > MODAL_HEIGHT * 0.3) {
         runOnJS(handleClose)();
       } else {
-        translateY.value = withSpring(0);
+        translateY.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.cubic) });
       }
     });
 

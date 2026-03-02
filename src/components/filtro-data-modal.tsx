@@ -9,10 +9,16 @@ import {
   View,
   TouchableOpacity,
   Modal,
-  Animated,
   Dimensions,
   TouchableWithoutFeedback,
 } from 'react-native';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+  runOnJS,
+} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
@@ -32,7 +38,8 @@ export function FiltroDataModal({
   dataFim: initialDataFim,
   onFilter,
 }: FiltroDataModalProps) {
-  const [slideAnim] = useState(new Animated.Value(0));
+  const translateY = useSharedValue(600);
+  const backdropOpacity = useSharedValue(0);
   const [dataInicio, setDataInicio] = useState<Date | null>(initialDataInicio);
   const [dataFim, setDataFim] = useState<Date | null>(initialDataFim);
   const [mesAtual, setMesAtual] = useState(new Date());
@@ -40,23 +47,21 @@ export function FiltroDataModal({
 
   useEffect(() => {
     if (visible) {
-      Animated.spring(slideAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        tension: 65,
-        friction: 11,
-      }).start();
+      translateY.value = withTiming(0, { duration: 300, easing: Easing.out(Easing.cubic) });
+      backdropOpacity.value = withTiming(1, { duration: 200 });
     } else {
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
+      translateY.value = withTiming(600, { duration: 300 });
+      backdropOpacity.value = withTiming(0, { duration: 200 });
     }
   }, [visible]);
 
   const handleClose = () => {
-    onClose();
+    translateY.value = withTiming(600, { duration: 300 });
+    backdropOpacity.value = withTiming(0, { duration: 200 }, (finished) => {
+      if (finished) {
+        runOnJS(onClose)();
+      }
+    });
   };
 
   const handleFilter = () => {
@@ -190,26 +195,23 @@ export function FiltroDataModal({
     );
   };
 
-  const translateY = slideAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [600, 0],
-  });
+  const animatedModalStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  const animatedBackdropStyle = useAnimatedStyle(() => ({
+    opacity: backdropOpacity.value * 0.5,
+  }));
 
   if (!visible) return null;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
+    <Modal visible={visible} transparent animationType="none" onRequestClose={handleClose}>
       <TouchableWithoutFeedback onPress={handleClose}>
         <View style={styles.overlay}>
+          <Animated.View style={[styles.backdrop, animatedBackdropStyle]} />
           <TouchableWithoutFeedback>
-            <Animated.View
-              style={[
-                styles.modalContainer,
-                {
-                  transform: [{ translateY }],
-                },
-              ]}
-            >
+            <Animated.View style={[styles.modalContainer, animatedModalStyle]}>
               {/* Header */}
               <View style={styles.header}>
                 <Text style={styles.title}>Filtrar por Data</Text>
@@ -264,8 +266,11 @@ export function FiltroDataModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#000000',
   },
   modalContainer: {
     backgroundColor: '#FFFFFF',

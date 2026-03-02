@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useNotasFiscais } from "@/contexts/notas-fiscais-context";
 import { useUser } from "@/contexts/user-context";
 import { formatCurrency } from "@/utils/formatters";
@@ -26,7 +27,6 @@ export default function Home() {
   const { user } = useUser();
   const { notasFiscais } = useNotasFiscais();
   
-  // Função para obter saudação baseada na hora
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Bom dia';
@@ -34,11 +34,13 @@ export default function Home() {
     return 'Boa noite';
   };
   
-  // Primeiro e segundo nome do usuário
   const shortName = getShortName(user);
-  
-  // Últimas 3 notas fiscais
   const ultimasNotas = notasFiscais.slice(0, 3);
+
+  const totalFaturado = useMemo(
+    () => notasFiscais.reduce((acc, nf) => acc + nf.serviceValue, 0),
+    [notasFiscais]
+  );
   
   return (
     <View style={styles.container}>
@@ -64,130 +66,133 @@ export default function Home() {
       <View style={styles.cardContainer}>
         <View style={styles.card}>
           <View style={styles.leftSection}>
-            <Text style={styles.percentageText}>0%</Text>
-            <Text style={styles.regimeText}>Simples Nacional</Text>
+            <View style={styles.infoBlock}>
+              <Text style={styles.percentageText}>0%</Text>
+              <Text style={styles.regimeText}>Simples{'\n'}Nacional</Text>
+            </View>
           </View>
 
           <View style={styles.rightSection}>
             <View style={styles.infoBlock}>
               <Text style={styles.labelText}>Total Faturado</Text>
-              <Text style={styles.valueText}>R$0.000,00</Text>
+              <Text style={styles.valueText}>{formatCurrency(totalFaturado)}</Text>
             </View>
 
             <View style={styles.infoBlock}>
               <Text style={styles.labelText}>Total de Impostos</Text>
-              <Text style={styles.valueText}>R$ 0.000,00</Text>
+              <Text style={styles.valueText}>--</Text>
             </View>
           </View>
         </View>
       </View>
 
-      {/* Botão Solicitar NF centralizado */}
-      <View style={styles.mainActionContainer}>
-        <TouchableOpacity 
-          style={styles.mainActionButton} 
-          activeOpacity={0.7}
-          onPress={() => router.push("/dashboard/nota-fiscal")}
-        >
-          <Ionicons name="add-circle" size={28} color="#FFFFFF" />
-          <Text style={styles.mainActionText}>Solicitar Nota Fiscal</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Botões secundários */}
-      <View style={styles.buttonsContainer}>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          <TouchableOpacity style={styles.actionButton} activeOpacity={0.7}>
-            <Ionicons name="folder-open-outline" size={24} color="#000000" />
-            <Text style={styles.buttonText}>Certidões Negativas</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionButton} activeOpacity={0.7}>
-            <Ionicons name="download-outline" size={24} color="#000000" />
-            <Text style={styles.buttonText}>Documentos</Text>
-          </TouchableOpacity>
-
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Botão Solicitar NF centralizado */}
+        <View style={styles.mainActionContainer}>
           <TouchableOpacity 
-            style={styles.actionButton} 
+            style={styles.mainActionButton} 
             activeOpacity={0.7}
-            onPress={() => router.push("/dashboard/glossario")}
+            onPress={() => router.push("/dashboard/nota-fiscal")}
           >
-            <Ionicons name="help-circle-outline" size={24} color="#000000" />
-            <Text style={styles.buttonText}>Glossário</Text>
+            <Ionicons name="add-circle" size={28} color="#FFFFFF" />
+            <Text style={styles.mainActionText}>Solicitar Nota Fiscal</Text>
           </TouchableOpacity>
-        </ScrollView>
-      </View>
-
-      {/* Seção Últimas NF Emitidas */}
-      <View style={styles.nfSection}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Últimas NF Emitidas</Text>
-          {ultimasNotas.length > 0 && (
-            <TouchableOpacity 
-              onPress={() => router.push("/dashboard/minhas-notas")}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.seeAllText}>Ver todas</Text>
-            </TouchableOpacity>
-          )}
         </View>
-        
-        {ultimasNotas.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="document-text-outline" size={48} color="#9CA3AF" />
-            <Text style={styles.emptyStateText}>
-              Você ainda não possui nenhuma nota fiscal emitida
-            </Text>
-            <TouchableOpacity 
-              style={styles.emptyStateButton}
-              onPress={() => router.push("/dashboard/nota-fiscal")}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.emptyStateButtonText}>Solicitar primeira NF</Text>
+
+        {/* Botões secundários */}
+        <View style={styles.buttonsContainer}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalScrollContent}
+          >
+            <TouchableOpacity style={styles.actionButton} activeOpacity={0.7}>
+              <Ionicons name="folder-open-outline" size={24} color="#000000" />
+              <Text style={styles.buttonText}>Certidões Negativas</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity style={styles.actionButton} activeOpacity={0.7}>
+              <Ionicons name="download-outline" size={24} color="#000000" />
+              <Text style={styles.buttonText}>Documentos</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.actionButton} 
+              activeOpacity={0.7}
+              onPress={() => router.push("/dashboard/glossario")}
+            >
+              <Ionicons name="help-circle-outline" size={24} color="#000000" />
+              <Text style={styles.buttonText}>Glossário</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+
+        {/* Seção Últimas NF Emitidas */}
+        <View style={styles.nfSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Últimas NF Emitidas</Text>
+            {ultimasNotas.length > 0 && (
+              <TouchableOpacity 
+                onPress={() => router.push("/dashboard/minhas-notas")}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.seeAllText}>Ver todas</Text>
+              </TouchableOpacity>
+            )}
           </View>
-        ) : (
-          <View style={styles.nfList}>
-            {ultimasNotas.map((nota, index) => (
-              <View key={nota.id}>
-                {index > 0 && <View style={styles.nfDivider} />}
-                <TouchableOpacity 
-                  style={styles.nfItem}
-                  onPress={() => router.push("/dashboard/minhas-notas")}
-                  activeOpacity={0.7}
-                >
-                  <View style={[
-                    styles.statusDot,
-                    { backgroundColor: STATUS_COLORS[nota.status] || '#6B7280' }
-                  ]} />
-                  <View style={styles.nfItemContent}>
-                    <View style={styles.nfItemText}>
-                      <Text style={styles.nfItemName} numberOfLines={1}>
-                        {nota.tomadorNome || 'N/A'}
-                      </Text>
-                      <Text style={styles.nfItemDate}>
-                        {nota.createdAt.toLocaleDateString('pt-BR')}
+          
+          {ultimasNotas.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="document-text-outline" size={48} color="#9CA3AF" />
+              <Text style={styles.emptyStateText}>
+                Você ainda não possui nenhuma nota fiscal emitida
+              </Text>
+              <TouchableOpacity 
+                style={styles.emptyStateButton}
+                onPress={() => router.push("/dashboard/nota-fiscal")}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.emptyStateButtonText}>Solicitar primeira NF</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.nfList}>
+              {ultimasNotas.map((nota, index) => (
+                <View key={nota.id}>
+                  {index > 0 && <View style={styles.nfDivider} />}
+                  <TouchableOpacity 
+                    style={styles.nfItem}
+                    onPress={() => router.push("/dashboard/minhas-notas")}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[
+                      styles.statusDot,
+                      { backgroundColor: STATUS_COLORS[nota.status] || '#6B7280' }
+                    ]} />
+                    <View style={styles.nfItemContent}>
+                      <View style={styles.nfItemText}>
+                        <Text style={styles.nfItemName} numberOfLines={1}>
+                          {nota.tomadorNome || 'N/A'}
+                        </Text>
+                        <Text style={styles.nfItemDate}>
+                          {nota.createdAt.toLocaleDateString('pt-BR')}
+                        </Text>
+                      </View>
+                      <Text style={styles.nfItemValue}>
+                        {formatCurrency(nota.serviceValue)}
                       </Text>
                     </View>
-                    <Text style={styles.nfItemValue}>
-                      {formatCurrency(nota.serviceValue)}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
-
-      {/* Conteúdo da página */}
-      <View style={styles.content}>
-        {/* Conteúdo adicional pode ser adicionado aqui */}
-      </View>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -239,9 +244,9 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FAB41B',
     borderRadius: 10,
-    padding: 24,
+    padding: 12,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 12,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -253,34 +258,39 @@ const styles = StyleSheet.create({
   },
   leftSection: {
     justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
+  },
+  rightSection: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: 12,
+  },
+  infoBlock: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 12,
+    padding: 12,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    gap: 4,
   },
   percentageText: {
-    fontSize: 32,
+    fontSize: 28,
     fontFamily: 'Urbanist_700Bold',
     color: '#000000',
   },
   regimeText: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: 'Urbanist_700Bold',
     color: '#000000',
-  },
-  rightSection: {
-    gap: 20,
-    justifyContent: 'center',
-  },
-  infoBlock: {
-    alignItems: 'flex-start',
+    textAlign: 'center',
   },
   labelText: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: 'Urbanist_600SemiBold',
     color: '#333333',
-    marginBottom: 4,
   },
   valueText: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'Urbanist_700Bold',
     color: '#000000',
   },
@@ -312,11 +322,17 @@ const styles = StyleSheet.create({
     fontFamily: 'Urbanist_700Bold',
     color: '#FFFFFF',
   },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 32,
+  },
   buttonsContainer: {
     paddingHorizontal: 24,
     marginBottom: 16,
   },
-  scrollContent: {
+  horizontalScrollContent: {
     gap: 12,
     paddingRight: 24,
   },
@@ -428,10 +444,5 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#E5E7EB',
     marginLeft: 52,
-  },
-  content: {
-    flex: 1,
-    paddingTop: 20,
-    paddingHorizontal: 24,
   },
 });
