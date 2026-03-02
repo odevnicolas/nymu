@@ -5,6 +5,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Tomador, TomadorFormData } from '@/lib/api/types';
 import * as tomadoresAPI from '@/lib/api/tomadores';
+import { getToken } from '@/lib/storage';
 
 interface TomadoresContextData {
   tomadores: Tomador[];
@@ -26,6 +27,12 @@ export function TomadoresProvider({ children }: { children: React.ReactNode }) {
    * Carrega tomadores da API
    */
   const refreshTomadores = useCallback(async () => {
+    // Só carregar se houver token (usuário autenticado)
+    const token = await getToken();
+    if (!token) {
+      return;
+    }
+
     setIsLoading(true);
     
     try {
@@ -33,16 +40,23 @@ export function TomadoresProvider({ children }: { children: React.ReactNode }) {
       setTomadores(response.tomadores);
     } catch (error) {
       console.error('Erro ao carregar tomadores:', error);
-      throw error;
+      // Não lançar erro para não quebrar o app
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Carregar tomadores ao montar o componente
+  // Carregar tomadores ao montar o componente (se autenticado)
   useEffect(() => {
-    refreshTomadores();
-  }, [refreshTomadores]);
+    const loadData = async () => {
+      const token = await getToken();
+      if (token) {
+        refreshTomadores();
+      }
+    };
+    
+    loadData();
+  }, []);
 
   /**
    * Adiciona um novo tomador via API
@@ -54,7 +68,7 @@ export function TomadoresProvider({ children }: { children: React.ReactNode }) {
       const response = await tomadoresAPI.createTomador(data);
       setTomadores(prev => [response.tomador, ...prev]);
     } catch (error) {
-      console.error('Erro ao adicionar tomador:', error);
+      // Re-lançar o erro para ser tratado no componente
       throw error;
     } finally {
       setIsLoading(false);

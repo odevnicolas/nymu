@@ -18,6 +18,7 @@ import { TomadorOpcoesModal } from '@/components/tomador-opcoes-modal';
 import { VisualizarDadosModal } from '@/components/visualizar-dados-modal';
 import { SolicitarNFModal } from '@/components/solicitar-nf-modal';
 import { SucessoModal } from '@/components/sucesso-modal';
+import { ErroModal } from '@/components/erro-modal';
 import { TomadorFormData, Tomador, SolicitarNotaFiscalFormData } from '@/lib/api/types';
 import { formatCPF, formatCNPJ, formatPhone } from '@/utils/validators';
 
@@ -32,6 +33,8 @@ export default function NotaFiscal() {
   const [solicitarNFModalVisible, setSolicitarNFModalVisible] = useState(false);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
   const [successModalTipo, setSuccessModalTipo] = useState<'cadastro' | 'nota-fiscal'>('cadastro');
+  const [erroModalVisible, setErroModalVisible] = useState(false);
+  const [erroMensagem, setErroMensagem] = useState({ titulo: '', mensagem: '' });
   
   // Tomador selecionado
   const [tomadorSelecionado, setTomadorSelecionado] = useState<Tomador | null>(null);
@@ -59,10 +62,50 @@ export default function NotaFiscal() {
   };
 
   const handleSaveTomador = async (data: TomadorFormData) => {
-    await addTomador(data);
-
-    setSuccessModalTipo('cadastro');
-    setSuccessModalVisible(true);
+    try {
+      await addTomador(data);
+      
+      // Fechar o modal de cadastro
+      setCadastroModalVisible(false);
+      
+      // Aguardar um pouco para a animação de fechamento antes de abrir o modal de sucesso
+      setTimeout(() => {
+        setSuccessModalTipo('cadastro');
+        setSuccessModalVisible(true);
+      }, 300);
+    } catch (error: any) {
+      const errorMessage = error?.message || '';
+      
+      // Verificar se é erro de duplicação (409 ou mensagem de duplicação)
+      const isDuplicado = 
+        errorMessage.includes('409') ||
+        errorMessage.toLowerCase().includes('já existe') ||
+        errorMessage.toLowerCase().includes('ja existe') ||
+        errorMessage.toLowerCase().includes('duplicado') ||
+        errorMessage.toLowerCase().includes('conflict');
+      
+      // Fechar o modal de cadastro primeiro
+      setCadastroModalVisible(false);
+      
+      // Aguardar a animação de fechamento antes de abrir o modal de erro
+      setTimeout(() => {
+        if (isDuplicado) {
+          const documento = data.tipo === 'PF' ? 'CPF' : 'CNPJ';
+          setErroMensagem({
+            titulo: 'Tomador já cadastrado',
+            mensagem: `Já existe um tomador cadastrado com esse ${documento}. Por favor, verifique os dados e tente novamente.`,
+          });
+          setErroModalVisible(true);
+        } else {
+          // Outros erros - mostrar mensagem específica se houver
+          setErroMensagem({
+            titulo: 'Erro ao cadastrar',
+            mensagem: errorMessage || 'Ocorreu um erro ao cadastrar o tomador. Por favor, tente novamente.',
+          });
+          setErroModalVisible(true);
+        }
+      }, 300);
+    }
   };
 
   // Handlers de interação com tomador
@@ -110,8 +153,14 @@ export default function NotaFiscal() {
       descricao: data.descricao,
     });
 
-    setSuccessModalTipo('nota-fiscal');
-    setSuccessModalVisible(true);
+    // Fechar o modal de solicitação
+    setSolicitarNFModalVisible(false);
+    
+    // Aguardar um pouco para a animação de fechamento antes de abrir o modal de sucesso
+    setTimeout(() => {
+      setSuccessModalTipo('nota-fiscal');
+      setSuccessModalVisible(true);
+    }, 300);
   };
 
   const handleCloseSuccessModal = () => {
@@ -178,6 +227,13 @@ export default function NotaFiscal() {
           visible={successModalVisible}
           onClose={handleCloseSuccessModal}
           tipo={successModalTipo}
+        />
+
+        <ErroModal
+          visible={erroModalVisible}
+          onClose={() => setErroModalVisible(false)}
+          titulo={erroMensagem.titulo}
+          mensagem={erroMensagem.mensagem}
         />
       </View>
     );
@@ -317,6 +373,13 @@ export default function NotaFiscal() {
         visible={successModalVisible}
         onClose={handleCloseSuccessModal}
         tipo={successModalTipo}
+      />
+
+      <ErroModal
+        visible={erroModalVisible}
+        onClose={() => setErroModalVisible(false)}
+        titulo={erroMensagem.titulo}
+        mensagem={erroMensagem.mensagem}
       />
     </View>
   );

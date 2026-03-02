@@ -5,6 +5,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { NotaFiscal, NotaFiscalStatus } from '@/lib/api/types';
 import * as notasFiscaisAPI from '@/lib/api/notas-fiscais';
+import { getToken } from '@/lib/storage';
 
 interface NotasFiscaisContextData {
   notasFiscais: NotaFiscal[];
@@ -32,6 +33,12 @@ export function NotasFiscaisProvider({ children }: { children: React.ReactNode }
    * Carrega notas fiscais da API
    */
   const refreshNotasFiscais = useCallback(async () => {
+    // Só carregar se houver token (usuário autenticado)
+    const token = await getToken();
+    if (!token) {
+      return;
+    }
+
     setIsLoading(true);
     
     try {
@@ -45,10 +52,17 @@ export function NotasFiscaisProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  // Carregar notas fiscais ao montar o componente
+  // Carregar notas fiscais ao montar o componente (se autenticado)
   useEffect(() => {
-    refreshNotasFiscais();
-  }, [refreshNotasFiscais]);
+    const loadData = async () => {
+      const token = await getToken();
+      if (token) {
+        refreshNotasFiscais();
+      }
+    };
+    
+    loadData();
+  }, []);
 
   /**
    * Solicita uma nova nota fiscal via API
