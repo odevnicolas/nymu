@@ -2,16 +2,16 @@
  * Modal de erro reutilizável
  */
 
-import React, { useEffect, useRef } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useRef } from "react";
 import {
+  Animated,
   Modal,
-  View,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  Animated,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+  View,
+} from "react-native";
 
 interface ErroModalProps {
   visible: boolean;
@@ -84,10 +84,7 @@ export function ErroModal({
           style={[
             styles.modalContainer,
             {
-              transform: [
-                { scale: scaleAnim },
-                { translateX: shakeAnim },
-              ],
+              transform: [{ scale: scaleAnim }, { translateX: shakeAnim }],
             },
           ]}
         >
@@ -119,20 +116,20 @@ export function ErroModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 32,
     zIndex: 9999,
   },
   modalContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 20,
     padding: 32,
-    alignItems: 'center',
-    width: '100%',
+    alignItems: "center",
+    width: "100%",
     maxWidth: 400,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 8,
@@ -146,31 +143,31 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontFamily: 'Urbanist_700Bold',
-    color: '#1F2937',
-    textAlign: 'center',
+    fontFamily: "Urbanist_700Bold",
+    color: "#1F2937",
+    textAlign: "center",
     marginBottom: 12,
   },
   message: {
     fontSize: 14,
-    fontFamily: 'Urbanist_400Regular',
-    color: '#6B7280',
-    textAlign: 'center',
+    fontFamily: "Urbanist_400Regular",
+    color: "#6B7280",
+    textAlign: "center",
     lineHeight: 20,
     marginBottom: 24,
   },
   button: {
-    backgroundColor: '#EF4444',
+    backgroundColor: "#EF4444",
     height: 48,
     paddingHorizontal: 48,
     borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
   },
   buttonText: {
     fontSize: 16,
-    fontFamily: 'Urbanist_600SemiBold',
-    color: '#FFFFFF',
+    fontFamily: "Urbanist_600SemiBold",
+    color: "#FFFFFF",
   },
 });
