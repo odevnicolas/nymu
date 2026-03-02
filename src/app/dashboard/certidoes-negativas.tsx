@@ -3,29 +3,23 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-export default function Documentos() {
+const CERTIDOES_EMPRESA = [
+  "Certidão Negativa de Débitos Relativos aos Tributos Federais",
+  "Dívida Ativa da União",
+  "Certidão Negativa de Débitos Trabalhistas",
+  "Certidão Negativa de Débitos Estaduais",
+  "Certificado de Regularidade do FGTS - CRF",
+  "Certidão Negativa de Débitos Municipais",
+];
+
+export default function CertidoesNegativas() {
   const [showDocumentoVazio, setShowDocumentoVazio] = useState(false);
 
-  const empresaDocuments = [
-    "CNPJ",
-    "Contrato Social",
-    "Inscrição Municipal",
-    "Simples Nacional",
-    "E-CNPJ",
-    "Termo",
-  ];
-
-  const pessoaFisicaDocuments = [
-    "CNH",
-    "CRM",
-    "Título de Eleitor",
-  ];
-
-  const handleDocumentPress = () => {
+  const handleItemPress = () => {
     setShowDocumentoVazio(true);
   };
 
-  // Tela branca com mensagem de nenhum documento enviado
+  // Tela "Nenhum documento enviado" (mesma de Documentos)
   if (showDocumentoVazio) {
     return (
       <View style={styles.container}>
@@ -61,57 +55,35 @@ export default function Documentos() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
+        <TouchableOpacity
+          style={styles.backButton}
           onPress={() => router.back()}
           activeOpacity={0.7}
         >
           <Ionicons name="arrow-back" size={24} color="#1F2937" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Documentos</Text>
+        <Text style={styles.headerTitle}>Certidões Negativas</Text>
         <View style={styles.placeholder} />
       </View>
 
       {/* Conteúdo */}
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        {/* Seção Empresa */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Empresa</Text>
-          <View style={styles.yellowLine} />
-          
-          {empresaDocuments.map((doc, index) => (
-            <View key={doc}>
-              <TouchableOpacity
-                style={styles.documentItem}
-                activeOpacity={0.7}
-                onPress={handleDocumentPress}
-              >
-                <Ionicons name="document-text-outline" size={20} color="#1F2937" />
-                <Text style={styles.documentText}>{doc}</Text>
-                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-              </TouchableOpacity>
-              {index < empresaDocuments.length - 1 && <View style={styles.divider} />}
-            </View>
-          ))}
-        </View>
+          <View style={styles.orangeLine} />
 
-        {/* Seção Pessoa Física */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Pessoa Física</Text>
-          <View style={styles.yellowLine} />
-          
-          {pessoaFisicaDocuments.map((doc, index) => (
-            <View key={doc}>
+          {CERTIDOES_EMPRESA.map((nome, index) => (
+            <View key={nome}>
               <TouchableOpacity
-                style={styles.documentItem}
+                style={styles.listItem}
                 activeOpacity={0.7}
-                onPress={handleDocumentPress}
+                onPress={handleItemPress}
               >
                 <Ionicons name="document-text-outline" size={20} color="#1F2937" />
-                <Text style={styles.documentText}>{doc}</Text>
+                <Text style={styles.itemText}>{nome}</Text>
                 <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
               </TouchableOpacity>
-              {index < pessoaFisicaDocuments.length - 1 && <View style={styles.divider} />}
+              {index < CERTIDOES_EMPRESA.length - 1 && <View style={styles.divider} />}
             </View>
           ))}
         </View>
@@ -159,7 +131,6 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   section: {
-    marginBottom: 32,
     paddingHorizontal: 24,
   },
   sectionTitle: {
@@ -168,19 +139,19 @@ const styles = StyleSheet.create({
     color: "#1F2937",
     marginBottom: 8,
   },
-  yellowLine: {
+  orangeLine: {
     height: 4,
     backgroundColor: "#FAB41B",
     marginBottom: 16,
     borderRadius: 2,
   },
-  documentItem: {
+  listItem: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 16,
     gap: 12,
   },
-  documentText: {
+  itemText: {
     flex: 1,
     fontSize: 16,
     fontFamily: "Urbanist_500Medium",
