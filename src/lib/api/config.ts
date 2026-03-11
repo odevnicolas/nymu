@@ -52,4 +52,7 @@ export const apiEndpoints = {
   // Impostos/Tributos
   taxes: `${API_URL}/taxes`,
   taxesSummary: `${API_URL}/taxes/summary`,
+  
+  // Notificações
+  notifications: `${API_URL}/notifications`,
 } as const;

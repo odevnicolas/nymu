@@ -268,3 +268,28 @@ export interface SolicitarNotaFiscalResponse {
   notaFiscal: NotaFiscal;
   message?: string;
 }
+
+/**
+ * Notificação do usuário (resposta da API)
+ */
+export interface Notification {
+  id: string;
+  title: string;
+  body?: string;
+  text?: string;
+  read: boolean;
+  createdAt: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Resposta paginada de listagem de notificações
+ */
+export interface NotificationsListResponse {
+  data: Notification[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  unreadCount: number;
+}
