@@ -48,4 +48,8 @@ export const apiEndpoints = {
   
   // CNPJ
   cnpjRequest: `${API_URL}/api/cnpj-request`,
+  
+  // Impostos/Tributos
+  taxes: `${API_URL}/taxes`,
+  taxesSummary: `${API_URL}/taxes/summary`,
 } as const;

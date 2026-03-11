@@ -1,46 +1,137 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { ScrollView, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useEffect } from "react";
+import { 
+  FlatList, 
+  StyleSheet, 
+  Text, 
+  TouchableOpacity, 
+  View,
+  RefreshControl,
+  ActivityIndicator 
+} from "react-native";
+import { useImpostos } from "@/contexts/impostos-context";
+import { 
+  formatCurrencyValue, 
+  formatVencimento, 
+  getStatusColor, 
+  getLetter 
+} from "@/lib/api/impostos";
 
 export default function Tributos() {
-  const tributos = [
-    {
-      id: "1",
-      sigla: "DAS",
-      nome: "Documento de Arrecadação do Simples Nacional",
-      vencimento: "Vence em 19/04/2024",
-      valor: "R$ 499,00",
-      color: "#E5E7EB",
-      letter: "I",
-    },
-    {
-      id: "2",
-      sigla: "DARF",
-      nome: "Documento de Arrecadação de Receitas Federais",
-      vencimento: "Vence em 5 dias",
-      valor: "R$ 1.499,00",
-      color: "#FEF3C7",
-      letter: "I",
-    },
-    {
-      id: "3",
-      sigla: "CSLL",
-      nome: "Imposto federal que incide sobre o lucro líquido da empresa",
-      vencimento: "Vence Hoje",
-      valor: "R$ 2.4000,00",
-      color: "#FEE2E2",
-      letter: "C",
-    },
-    {
-      id: "4",
-      sigla: "ICMS - Vencido",
-      nome: "Imposto estadual que incide sobre a circulação de mercadorias e alguns serviços",
-      vencimento: "Vence em 19/04/2024",
-      valor: "R$ 1.4000,00",
-      color: "#E5E7EB",
-      letter: "I",
-    },
-  ];
+  const { impostos, summary, isLoading, refreshImpostos } = useImpostos();
+
+  // Função para renderizar o card de resumo
+  const renderSummaryCard = () => {
+    if (isLoading && !summary) {
+      return (
+        <View style={styles.summaryCard}>
+          <ActivityIndicator size="small" color="#000000" />
+        </View>
+      );
+    }
+
+    if (!summary) {
+      return (
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryRow}>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Total de Impostos</Text>
+              <Text style={styles.summaryValue}>R$ 0,00</Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Qtd. Boletos</Text>
+              <Text style={styles.summaryValue}>0</Text>
+            </View>
+          </View>
+          
+          <View style={styles.summaryRow}>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>DAS</Text>
+              <Text style={styles.summaryValue}>R$ 0,00</Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>DARF</Text>
+              <Text style={styles.summaryValue}>R$ 0,00</Text>
+            </View>
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.summaryCard}>
+        <View style={styles.summaryRow}>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Total de Impostos</Text>
+            <Text style={styles.summaryValue}>
+              {formatCurrencyValue(summary.totalImpostos * 100)}
+            </Text>
+          </View>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Qtd. Boletos</Text>
+            <Text style={styles.summaryValue}>{summary.qtdBoletos}</Text>
+          </View>
+        </View>
+        
+        <View style={styles.summaryRow}>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>DAS</Text>
+            <Text style={styles.summaryValue}>
+              {formatCurrencyValue(summary.das * 100)}
+            </Text>
+          </View>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>DARF</Text>
+            <Text style={styles.summaryValue}>
+              {formatCurrencyValue(summary.darf * 100)}
+            </Text>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  // Função para renderizar lista vazia
+  const renderEmptyState = () => (
+    <View style={styles.emptyState}>
+      <Ionicons name="document-text-outline" size={64} color="#9CA3AF" />
+      <Text style={styles.emptyTitle}>Nenhum imposto encontrado</Text>
+      <Text style={styles.emptySubtitle}>
+        Os impostos e tributos aparecerão aqui quando forem gerados pelo sistema.
+      </Text>
+    </View>
+  );
+
+  // Função para renderizar cada item
+  const renderItem = ({ item: tributo, index }: { item: any; index: number }) => (
+    <View>
+      <TouchableOpacity
+        style={styles.tributoItem}
+        activeOpacity={0.7}
+        accessibilityLabel={`${tributo.sigla} - ${formatCurrencyValue(tributo.valor)}`}
+        accessibilityRole="button"
+      >
+        <View style={[styles.tributoIcon, { backgroundColor: getStatusColor(tributo.status) }]}>
+          <Text style={styles.tributoLetter}>{getLetter(tributo.sigla)}</Text>
+        </View>
+        
+        <View style={styles.tributoContent}>
+          <Text style={styles.tributoSigla}>{tributo.sigla}</Text>
+          <Text style={styles.tributoNome} numberOfLines={2}>{tributo.nome}</Text>
+          <View style={styles.tributoFooter}>
+            <Text style={styles.tributoVencimento}>
+              {formatVencimento(tributo.dataVencimento)}
+            </Text>
+            <Text style={styles.tributoValor}>
+              {formatCurrencyValue(tributo.valor)}
+            </Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+      {index < impostos.length - 1 && <View style={styles.divider} />}
+    </View>
+  );
 
   return (
     <View style={styles.container}>
@@ -49,83 +140,58 @@ export default function Tributos() {
 
       {/* Card de resumo amarelo sobreposto */}
       <View style={styles.summaryCardContainer}>
-        <View style={styles.summaryCard}>
-        <View style={styles.summaryRow}>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Total de Impostos</Text>
-            <Text style={styles.summaryValue}>R$ 4.388,00</Text>
-          </View>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Qtd. Boletos</Text>
-            <Text style={styles.summaryValue}>3</Text>
-          </View>
-        </View>
-        
-        <View style={styles.summaryRow}>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>DAS</Text>
-            <Text style={styles.summaryValue}>R$ 499,00</Text>
-          </View>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>DARF</Text>
-            <Text style={styles.summaryValue}>R$ 4.000,00</Text>
-          </View>
-        </View>
-        </View>
+        {renderSummaryCard()}
       </View>
 
-      <ScrollView style={styles.scrollView}>
-      {/* Acesso Rápido */}
-      <View style={styles.quickAccessContainer}>
-        <Text style={styles.sectionTitle}>Acesso Rápido</Text>
-        <View style={styles.quickAccessButtons}>
-          <TouchableOpacity 
-            style={styles.quickButton} 
-            activeOpacity={0.7}
-            onPress={() => router.push("/dashboard/glossario")}
-          >
-            <Ionicons name="help-circle-outline" size={32} color="#1F2937" />
-            <Text style={styles.quickButtonText}>Glossário</Text>
-          </TouchableOpacity>
+      <FlatList
+        style={styles.flatList}
+        contentContainerStyle={styles.listContent}
+        data={impostos}
+        keyExtractor={(item) => item.id}
+        refreshControl={
+          <RefreshControl refreshing={isLoading} onRefresh={refreshImpostos} />
+        }
+        ListEmptyComponent={!isLoading ? renderEmptyState : null}
+        ListHeaderComponent={
+          <View>
+            {/* Acesso Rápido */}
+            <View style={styles.quickAccessContainer}>
+              <Text style={styles.sectionTitle}>Acesso Rápido</Text>
+              <View style={styles.quickAccessButtons}>
+                <TouchableOpacity 
+                  style={styles.quickButton} 
+                  activeOpacity={0.7}
+                  onPress={() => router.push("/dashboard/glossario")}
+                  accessibilityLabel="Glossário"
+                  accessibilityRole="button"
+                >
+                  <Ionicons name="help-circle-outline" size={32} color="#1F2937" />
+                  <Text style={styles.quickButtonText}>Glossário</Text>
+                </TouchableOpacity>
 
-          <TouchableOpacity style={styles.quickButton} activeOpacity={0.7}>
-            <Ionicons name="folder-open-outline" size={32} color="#1F2937" />
-            <Text style={styles.quickButtonText}>Upload{'\n'}de Arquivos</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Vencimentos deste Mês */}
-      <View style={styles.vencimentosContainer}>
-        <Text style={styles.sectionTitle}>Vencimentos deste Mês</Text>
-        <View style={styles.yellowLine} />
-        
-        <FlatList
-          data={tributos}
-          keyExtractor={(item) => item.id}
-          scrollEnabled={false}
-          renderItem={({ item: tributo, index }) => (
-            <View>
-              <View style={styles.tributoItem}>
-                <View style={[styles.tributoIcon, { backgroundColor: tributo.color }]}>
-                  <Text style={styles.tributoLetter}>{tributo.letter}</Text>
-                </View>
-                
-                <View style={styles.tributoContent}>
-                  <Text style={styles.tributoSigla}>{tributo.sigla}</Text>
-                  <Text style={styles.tributoNome}>{tributo.nome}</Text>
-                  <View style={styles.tributoFooter}>
-                    <Text style={styles.tributoVencimento}>{tributo.vencimento}</Text>
-                    <Text style={styles.tributoValor}>{tributo.valor}</Text>
-                  </View>
-                </View>
+                <TouchableOpacity 
+                  style={styles.quickButton} 
+                  activeOpacity={0.7}
+                  accessibilityLabel="Upload de Arquivos"
+                  accessibilityRole="button"
+                >
+                  <Ionicons name="folder-open-outline" size={32} color="#1F2937" />
+                  <Text style={styles.quickButtonText}>Upload{'\n'}de Arquivos</Text>
+                </TouchableOpacity>
               </View>
-              {index < tributos.length - 1 && <View style={styles.divider} />}
             </View>
-          )}
-        />
-      </View>
-      </ScrollView>
+
+            {/* Título da seção de vencimentos */}
+            {impostos.length > 0 && (
+              <View style={styles.vencimentosContainer}>
+                <Text style={styles.sectionTitle}>Vencimentos deste Mês</Text>
+                <View style={styles.yellowLine} />
+              </View>
+            )}
+          </View>
+        }
+        renderItem={renderItem}
+      />
     </View>
   );
 }
@@ -162,8 +228,11 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
-  scrollView: {
+  flatList: {
     flex: 1,
+  },
+  listContent: {
+    paddingBottom: 24,
   },
   summaryRow: {
     flexDirection: "row",
@@ -218,7 +287,7 @@ const styles = StyleSheet.create({
   },
   vencimentosContainer: {
     paddingHorizontal: 24,
-    paddingBottom: 24,
+    marginBottom: 16,
   },
   yellowLine: {
     height: 4,
@@ -226,10 +295,31 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderRadius: 2,
   },
+  emptyState: {
+    paddingHorizontal: 24,
+    paddingTop: 40,
+    alignItems: "center",
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontFamily: "Urbanist_600SemiBold",
+    color: "#1F2937",
+    marginTop: 16,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    fontFamily: "Urbanist_400Regular",
+    color: "#6B7280",
+    textAlign: "center",
+    marginTop: 8,
+    paddingHorizontal: 24,
+  },
   tributoItem: {
     flexDirection: "row",
     paddingVertical: 16,
+    paddingHorizontal: 24,
     gap: 16,
+    backgroundColor: "#FFFFFF",
   },
   tributoIcon: {
     width: 48,
@@ -277,6 +367,6 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: "#E5E7EB",
-    marginLeft: 64,
+    marginLeft: 80,
   },
 });

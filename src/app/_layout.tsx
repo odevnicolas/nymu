@@ -16,6 +16,7 @@ import '../../global.css';
 import { NotasFiscaisProvider } from '@/contexts/notas-fiscais-context';
 import { TomadoresProvider } from '@/contexts/tomadores-context';
 import { UserProvider } from '@/contexts/user-context';
+import { ImpostosProvider } from '@/contexts/impostos-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { setupAuthInterceptor } from '@/lib/api/interceptors';
 
@@ -63,23 +64,25 @@ export default function RootLayout() {
     <UserProvider>
       <TomadoresProvider>
         <NotasFiscaisProvider>
-          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <Stack 
-            screenOptions={{ 
-              headerShown: false,
-              contentStyle: { backgroundColor: '#FFFFFF' },
-              animation: 'fade',
-            }}
-          >
-            <Stack.Screen name="index" />
-            <Stack.Screen name="public/onboarding" />
-            <Stack.Screen name="public/login" />
-            <Stack.Screen name="public/code-login" />
-            <Stack.Screen name="public/sign-up" />
-            <Stack.Screen name="dashboard" options={{ headerShown: false }} />
-          </Stack>
-          <StatusBar style="auto" />
-          </ThemeProvider>
+          <ImpostosProvider>
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+              <Stack 
+              screenOptions={{ 
+                headerShown: false,
+                contentStyle: { backgroundColor: '#FFFFFF' },
+                animation: 'fade',
+              }}
+            >
+              <Stack.Screen name="index" />
+              <Stack.Screen name="public/onboarding" />
+              <Stack.Screen name="public/login" />
+              <Stack.Screen name="public/code-login" />
+              <Stack.Screen name="public/sign-up" />
+              <Stack.Screen name="dashboard" options={{ headerShown: false }} />
+            </Stack>
+            <StatusBar style="auto" />
+            </ThemeProvider>
+          </ImpostosProvider>
         </NotasFiscaisProvider>
       </TomadoresProvider>
     </UserProvider>
