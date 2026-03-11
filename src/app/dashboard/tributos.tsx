@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useEffect } from "react";
 import { 
   FlatList, 
   StyleSheet, 
@@ -8,7 +7,6 @@ import {
   TouchableOpacity, 
   View,
   RefreshControl,
-  ActivityIndicator 
 } from "react-native";
 import { useImpostos } from "@/contexts/impostos-context";
 import { 
@@ -17,6 +15,7 @@ import {
   getStatusColor, 
   getLetter 
 } from "@/lib/api/impostos";
+import { SummaryCardSkeleton, ImpostosListSkeleton } from "@/components/ui/skeleton";
 
 export default function Tributos() {
   const { impostos, summary, isLoading, refreshImpostos } = useImpostos();
@@ -24,11 +23,7 @@ export default function Tributos() {
   // Função para renderizar o card de resumo
   const renderSummaryCard = () => {
     if (isLoading && !summary) {
-      return (
-        <View style={styles.summaryCard}>
-          <ActivityIndicator size="small" color="#000000" />
-        </View>
-      );
+      return <SummaryCardSkeleton />;
     }
 
     if (!summary) {
@@ -103,6 +98,16 @@ export default function Tributos() {
     </View>
   );
 
+  // Função para renderizar skeleton da lista
+  const renderListSkeleton = () => (
+    <View>
+      <View style={styles.quickAccessContainer}>
+        <Text style={styles.sectionTitle}>Acesso Rápido</Text>
+      </View>
+      <ImpostosListSkeleton count={3} />
+    </View>
+  );
+
   // Função para renderizar cada item
   const renderItem = ({ item: tributo, index }: { item: any; index: number }) => (
     <View>
@@ -151,44 +156,49 @@ export default function Tributos() {
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={refreshImpostos} />
         }
-        ListEmptyComponent={!isLoading ? renderEmptyState : null}
+        ListEmptyComponent={() => {
+          if (isLoading) {
+            return renderListSkeleton();
+          }
+          return renderEmptyState();
+        }}
         ListHeaderComponent={
-          <View>
-            {/* Acesso Rápido */}
-            <View style={styles.quickAccessContainer}>
-              <Text style={styles.sectionTitle}>Acesso Rápido</Text>
-              <View style={styles.quickAccessButtons}>
-                <TouchableOpacity 
-                  style={styles.quickButton} 
-                  activeOpacity={0.7}
-                  onPress={() => router.push("/dashboard/glossario")}
-                  accessibilityLabel="Glossário"
-                  accessibilityRole="button"
-                >
-                  <Ionicons name="help-circle-outline" size={32} color="#1F2937" />
-                  <Text style={styles.quickButtonText}>Glossário</Text>
-                </TouchableOpacity>
+          !isLoading && impostos.length > 0 ? (
+            <View>
+              {/* Acesso Rápido */}
+              <View style={styles.quickAccessContainer}>
+                <Text style={styles.sectionTitle}>Acesso Rápido</Text>
+                <View style={styles.quickAccessButtons}>
+                  <TouchableOpacity 
+                    style={styles.quickButton} 
+                    activeOpacity={0.7}
+                    onPress={() => router.push("/dashboard/glossario")}
+                    accessibilityLabel="Glossário"
+                    accessibilityRole="button"
+                  >
+                    <Ionicons name="help-circle-outline" size={32} color="#1F2937" />
+                    <Text style={styles.quickButtonText}>Glossário</Text>
+                  </TouchableOpacity>
 
-                <TouchableOpacity 
-                  style={styles.quickButton} 
-                  activeOpacity={0.7}
-                  accessibilityLabel="Upload de Arquivos"
-                  accessibilityRole="button"
-                >
-                  <Ionicons name="folder-open-outline" size={32} color="#1F2937" />
-                  <Text style={styles.quickButtonText}>Upload{'\n'}de Arquivos</Text>
-                </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.quickButton} 
+                    activeOpacity={0.7}
+                    accessibilityLabel="Upload de Arquivos"
+                    accessibilityRole="button"
+                  >
+                    <Ionicons name="folder-open-outline" size={32} color="#1F2937" />
+                    <Text style={styles.quickButtonText}>Upload{'\n'}de Arquivos</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
 
-            {/* Título da seção de vencimentos */}
-            {impostos.length > 0 && (
+              {/* Título da seção de vencimentos */}
               <View style={styles.vencimentosContainer}>
                 <Text style={styles.sectionTitle}>Vencimentos deste Mês</Text>
                 <View style={styles.yellowLine} />
               </View>
-            )}
-          </View>
+            </View>
+          ) : null
         }
         renderItem={renderItem}
       />
