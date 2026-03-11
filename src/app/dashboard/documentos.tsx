@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function Documentos() {
   const [showDocumentoVazio, setShowDocumentoVazio] = useState(false);
@@ -79,20 +79,27 @@ export default function Documentos() {
           <Text style={styles.sectionTitle}>Empresa</Text>
           <View style={styles.yellowLine} />
           
-          {empresaDocuments.map((doc, index) => (
-            <View key={doc}>
-              <TouchableOpacity
-                style={styles.documentItem}
-                activeOpacity={0.7}
-                onPress={handleDocumentPress}
-              >
-                <Ionicons name="document-text-outline" size={20} color="#1F2937" />
-                <Text style={styles.documentText}>{doc}</Text>
-                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-              </TouchableOpacity>
-              {index < empresaDocuments.length - 1 && <View style={styles.divider} />}
-            </View>
-          ))}
+          <FlatList
+            data={empresaDocuments}
+            keyExtractor={(item) => item}
+            scrollEnabled={false}
+            renderItem={({ item: doc, index }) => (
+              <View>
+                <TouchableOpacity
+                  style={styles.documentItem}
+                  activeOpacity={0.7}
+                  onPress={handleDocumentPress}
+                  accessibilityLabel={`Documento ${doc}`}
+                  accessibilityRole="button"
+                >
+                  <Ionicons name="document-text-outline" size={20} color="#1F2937" />
+                  <Text style={styles.documentText}>{doc}</Text>
+                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                </TouchableOpacity>
+                {index < empresaDocuments.length - 1 && <View style={styles.divider} />}
+              </View>
+            )}
+          />
         </View>
 
         {/* Seção Pessoa Física */}
@@ -100,20 +107,27 @@ export default function Documentos() {
           <Text style={styles.sectionTitle}>Pessoa Física</Text>
           <View style={styles.yellowLine} />
           
-          {pessoaFisicaDocuments.map((doc, index) => (
-            <View key={doc}>
-              <TouchableOpacity
-                style={styles.documentItem}
-                activeOpacity={0.7}
-                onPress={handleDocumentPress}
-              >
-                <Ionicons name="document-text-outline" size={20} color="#1F2937" />
-                <Text style={styles.documentText}>{doc}</Text>
-                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-              </TouchableOpacity>
-              {index < pessoaFisicaDocuments.length - 1 && <View style={styles.divider} />}
-            </View>
-          ))}
+          <FlatList
+            data={pessoaFisicaDocuments}
+            keyExtractor={(item) => item}
+            scrollEnabled={false}
+            renderItem={({ item: doc, index }) => (
+              <View>
+                <TouchableOpacity
+                  style={styles.documentItem}
+                  activeOpacity={0.7}
+                  onPress={handleDocumentPress}
+                  accessibilityLabel={`Documento ${doc}`}
+                  accessibilityRole="button"
+                >
+                  <Ionicons name="document-text-outline" size={20} color="#1F2937" />
+                  <Text style={styles.documentText}>{doc}</Text>
+                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                </TouchableOpacity>
+                {index < pessoaFisicaDocuments.length - 1 && <View style={styles.divider} />}
+              </View>
+            )}
+          />
         </View>
       </ScrollView>
     </View>

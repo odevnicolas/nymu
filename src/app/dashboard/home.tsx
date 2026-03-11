@@ -5,7 +5,8 @@ import { formatCurrency } from "@/utils/formatters";
 import { getShortName } from "@/utils/user";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useDimensions } from "@/hooks/use-dimensions";
 
 const STATUS_COLORS: Record<string, string> = {
   PROCESSANDO: '#3B82F6',
@@ -26,6 +27,7 @@ const STATUS_LABELS: Record<string, string> = {
 export default function Home() {
   const { user } = useUser();
   const { notasFiscais } = useNotasFiscais();
+  const { spacing, fontSize } = useDimensions();
   
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -49,6 +51,9 @@ export default function Home() {
           style={styles.greetingContainer}
           onPress={() => router.push("/dashboard/configuracoes")}
           activeOpacity={0.7}
+          accessibilityLabel="Configurações"
+          accessibilityHint="Pressione para acessar as configurações"
+          accessibilityRole="button"
         >
           <Text style={styles.greetingText}>{getGreeting()}!</Text>
           <Text style={styles.userName}>{shortName}🖐</Text>
@@ -58,6 +63,9 @@ export default function Home() {
           style={styles.notificationButton} 
           activeOpacity={0.7}
           onPress={() => router.push("/dashboard/notificacoes")}
+          accessibilityLabel="Notificações"
+          accessibilityHint="Pressione para ver as notificações"
+          accessibilityRole="button"
         >
           <Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
         </TouchableOpacity>
@@ -97,6 +105,9 @@ export default function Home() {
             style={styles.mainActionButton} 
             activeOpacity={0.7}
             onPress={() => router.push("/dashboard/nota-fiscal")}
+            accessibilityLabel="Solicitar Nota Fiscal"
+            accessibilityHint="Pressione para solicitar uma nova nota fiscal"
+            accessibilityRole="button"
           >
             <Ionicons name="add-circle" size={28} color="#FFFFFF" />
             <Text style={styles.mainActionText}>Solicitar Nota Fiscal</Text>
@@ -160,14 +171,19 @@ export default function Home() {
               </TouchableOpacity>
             </View>
           ) : (
-            <View style={styles.nfList}>
-              {ultimasNotas.map((nota, index) => (
-                <View key={nota.id}>
+            <FlatList
+              data={ultimasNotas}
+              keyExtractor={(item) => item.id}
+              scrollEnabled={false}
+              renderItem={({ item: nota, index }) => (
+                <View>
                   {index > 0 && <View style={styles.nfDivider} />}
                   <TouchableOpacity 
                     style={styles.nfItem}
                     onPress={() => router.push("/dashboard/minhas-notas")}
                     activeOpacity={0.7}
+                    accessibilityLabel={`Nota fiscal de ${nota.tomadorNome || 'N/A'} no valor de ${formatCurrency(nota.serviceValue)}`}
+                    accessibilityRole="button"
                   >
                     <View style={[
                       styles.statusDot,
@@ -188,8 +204,8 @@ export default function Home() {
                     </View>
                   </TouchableOpacity>
                 </View>
-              ))}
-            </View>
+              )}
+            />
           )}
         </View>
       </ScrollView>

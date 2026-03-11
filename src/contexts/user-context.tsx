@@ -7,6 +7,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '@/lib/api/types';
 import { getToken, removeToken } from '@/lib/storage';
+import { useAuthEventEmitter } from '@/hooks/use-auth-event';
 
 interface UserContextType {
   user: User | null;
@@ -20,6 +21,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { emitLogout } = useAuthEventEmitter();
 
   // Carregar dados do usuário do storage ao inicializar
   useEffect(() => {
@@ -43,6 +45,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
     try {
       await removeToken();
       setUser(null);
+      // Emitir evento de logout para notificar os providers
+      emitLogout();
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
     }

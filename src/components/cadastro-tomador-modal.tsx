@@ -2,7 +2,7 @@
  * Modal Bottom Sheet para cadastro de tomadores (PF/PJ)
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Modal,
   StyleSheet,
@@ -80,6 +80,7 @@ export function CadastroTomadorModal({
   const [ufError, setUfError] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   // Animações (subida suave na abertura, sem bounce)
   useEffect(() => {
@@ -301,7 +302,7 @@ export function CadastroTomadorModal({
         <KeyboardAvoidingView
           style={styles.container}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 20}
         >
           {/* Backdrop */}
           <TouchableWithoutFeedback onPress={() => {
@@ -347,11 +348,11 @@ export function CadastroTomadorModal({
 
               {/* Formulário */}
               <ScrollView
+                ref={scrollViewRef}
                 style={styles.scrollView}
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
-                keyboardDismissMode="on-drag"
               >
                 {/* Nome */}
                 <View style={styles.fieldContainer}>

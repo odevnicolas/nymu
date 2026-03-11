@@ -2,7 +2,7 @@
  * Modal de solicitação de nota fiscal
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Modal,
   StyleSheet,
@@ -60,6 +60,7 @@ export function SolicitarNFModal({ visible, onClose, onSubmit, tomador }: Solici
   const [descricaoError, setDescricaoError] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   // Animações
   useEffect(() => {
@@ -239,7 +240,7 @@ export function SolicitarNFModal({ visible, onClose, onSubmit, tomador }: Solici
         <KeyboardAvoidingView
           style={styles.container}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 20}
         >
           {/* Backdrop */}
           <TouchableWithoutFeedback onPress={() => {
@@ -267,11 +268,11 @@ export function SolicitarNFModal({ visible, onClose, onSubmit, tomador }: Solici
 
               {/* Formulário */}
               <ScrollView
+                ref={scrollViewRef}
                 style={styles.scrollView}
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
-                keyboardDismissMode="on-drag"
               >
                 {/* Local da prestação */}
                 <View style={styles.fieldContainer}>

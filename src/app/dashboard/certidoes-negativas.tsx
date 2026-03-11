@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 const CERTIDOES_EMPRESA = [
   "Certidão Negativa de Débitos Relativos aos Tributos Federais",
@@ -67,27 +67,33 @@ export default function CertidoesNegativas() {
       </View>
 
       {/* Conteúdo */}
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Empresa</Text>
-          <View style={styles.orangeLine} />
-
-          {CERTIDOES_EMPRESA.map((nome, index) => (
-            <View key={nome}>
-              <TouchableOpacity
-                style={styles.listItem}
-                activeOpacity={0.7}
-                onPress={handleItemPress}
-              >
-                <Ionicons name="document-text-outline" size={20} color="#1F2937" />
-                <Text style={styles.itemText}>{nome}</Text>
-                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-              </TouchableOpacity>
-              {index < CERTIDOES_EMPRESA.length - 1 && <View style={styles.divider} />}
-            </View>
-          ))}
-        </View>
-      </ScrollView>
+      <FlatList
+        data={CERTIDOES_EMPRESA}
+        keyExtractor={(item) => item}
+        contentContainerStyle={styles.content}
+        ListHeaderComponent={
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Empresa</Text>
+            <View style={styles.orangeLine} />
+          </View>
+        }
+        renderItem={({ item: nome, index }) => (
+          <View>
+            <TouchableOpacity
+              style={styles.listItem}
+              activeOpacity={0.7}
+              onPress={handleItemPress}
+              accessibilityLabel={nome}
+              accessibilityRole="button"
+            >
+              <Ionicons name="document-text-outline" size={20} color="#1F2937" />
+              <Text style={styles.itemText}>{nome}</Text>
+              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+            </TouchableOpacity>
+            {index < CERTIDOES_EMPRESA.length - 1 && <View style={styles.divider} />}
+          </View>
+        )}
+      />
     </View>
   );
 }

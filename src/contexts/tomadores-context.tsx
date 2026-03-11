@@ -6,6 +6,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import { Tomador, TomadorFormData } from '@/lib/api/types';
 import * as tomadoresAPI from '@/lib/api/tomadores';
 import { getToken, removeToken } from '@/lib/storage';
+import { useAuthEventListener } from '@/hooks/use-auth-event';
 
 interface TomadoresContextData {
   tomadores: Tomador[];
@@ -61,7 +62,17 @@ export function TomadoresProvider({ children }: { children: React.ReactNode }) {
     };
     
     loadData();
-  }, []);
+  }, [refreshTomadores]);
+
+  // Ouvir eventos de login para recarregar dados
+  useAuthEventListener({
+    onLogin: () => {
+      refreshTomadores();
+    },
+    onLogout: () => {
+      setTomadores([]);
+    },
+  });
 
   /**
    * Adiciona um novo tomador via API

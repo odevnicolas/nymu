@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { saveOnboardingCompleted } from "@/lib/storage";
 
 const ONBOARDING_DATA = [
   {
@@ -27,10 +28,12 @@ const ONBOARDING_DATA = [
 export default function Onboarding() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentIndex < ONBOARDING_DATA.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
+      // Salvar flag que o onboarding foi completado
+      await saveOnboardingCompleted();
       router.push('/public/login');
     }
   };

@@ -5,9 +5,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Alert, Image, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useAuthEventEmitter } from "@/hooks/use-auth-event";
 
 export default function SignIn() {
   const { setUser } = useUser();
+  const { emitLogin } = useAuthEventEmitter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -49,12 +51,6 @@ export default function SignIn() {
     try {
       const { token, user } = await login(email.trim(), password);
       
-      // Log para debug: ver o que foi recebido no componente
-      console.log('🔍 [SIGN-IN] Dados recebidos do login:', {
-        token: token ? `${token.substring(0, 20)}...` : 'não recebido',
-        user: user || 'não recebido',
-      });
-      
       // Salvar token no storage (se falhar, não impede o login)
       try {
         await saveToken(token);
@@ -65,6 +61,9 @@ export default function SignIn() {
       
       // Salvar dados do usuário no contexto
       setUser(user);
+      
+      // Emitir evento de login para notificar os providers
+      emitLogin();
       
       // Navegar para o dashboard após login bem-sucedido
       router.replace('/dashboard/' as any);
@@ -109,7 +108,7 @@ export default function SignIn() {
     <KeyboardAvoidingView 
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 20}
     >
       <ScrollView 
         ref={scrollViewRef}

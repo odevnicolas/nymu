@@ -8,7 +8,7 @@ import {
   Text,
   View,
   TouchableOpacity,
-  ScrollView,
+  FlatList,
   RefreshControl,
   Alert,
 } from 'react-native';
@@ -143,15 +143,15 @@ export default function MinhasNotas() {
       </View>
 
       {/* Lista */}
-      <ScrollView
-        style={styles.scrollView}
+      <FlatList
+        data={notasFiscais}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />
         }
-      >
-        {notasFiscais.length === 0 ? (
+        ListEmptyComponent={
           <View style={styles.emptyState}>
             <Ionicons name="document-text-outline" size={64} color="#9CA3AF" />
             <Text style={styles.emptyTitle}>Nenhuma nota fiscal emitida</Text>
@@ -159,30 +159,30 @@ export default function MinhasNotas() {
               As notas fiscais que você solicitar aparecerão aqui.
             </Text>
           </View>
-        ) : (
-          notasFiscais.map((nota) => (
-            <TouchableOpacity
-              key={nota.id}
-              style={styles.notaCard}
-              onPress={() => handleNotaPress(nota)}
-              activeOpacity={0.7}
-            >
-              {/* Título */}
-              <Text style={styles.notaTomador}>{nota.tomadorNome || 'N/A'}</Text>
-              
-              {/* Info */}
-              <View style={styles.notaInfo}>
-                <Text style={styles.notaDate}>
-                  Emitida em {nota.createdAt.toLocaleDateString('pt-BR')}
-                </Text>
-                <Text style={styles.notaValue}>
-                  {formatCurrency(nota.serviceValue)}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))
+        }
+        renderItem={({ item: nota }) => (
+          <TouchableOpacity
+            style={styles.notaCard}
+            onPress={() => handleNotaPress(nota)}
+            activeOpacity={0.7}
+            accessibilityLabel={`Nota fiscal de ${nota.tomadorNome || 'N/A'} no valor de ${formatCurrency(nota.serviceValue)}`}
+            accessibilityRole="button"
+          >
+            {/* Título */}
+            <Text style={styles.notaTomador}>{nota.tomadorNome || 'N/A'}</Text>
+            
+            {/* Info */}
+            <View style={styles.notaInfo}>
+              <Text style={styles.notaDate}>
+                Emitida em {nota.createdAt.toLocaleDateString('pt-BR')}
+              </Text>
+              <Text style={styles.notaValue}>
+                {formatCurrency(nota.serviceValue)}
+              </Text>
+            </View>
+          </TouchableOpacity>
         )}
-      </ScrollView>
+      />
 
       {/* Modals */}
       <DetalhesNFModal

@@ -46,14 +46,6 @@ export async function login(
   
   const response = await loginRequest(body);
   
-  // Log para debug: ver o que está sendo extraído
-  console.log('🔍 [LOGIN] Estrutura da resposta:', {
-    hasResult: !!response.result,
-    hasToken: !!response.result?.token,
-    hasUser: !!response.result?.user,
-    userData: response.result?.user,
-  });
-  
   // Normalizar: se vier "nome" do backend, mapear para "name"
   const user = response.result.user;
   if (user.nome && !user.name) {
@@ -81,9 +73,6 @@ export async function loginRequest(body: LoginRequest): Promise<LoginResponse> {
     method: 'POST',
     body: JSON.stringify(body),
   });
-  
-  // Log para debug: ver o que o backend retorna
-  console.log('🔍 [LOGIN] Resposta completa da API:', JSON.stringify(response, null, 2));
   
   return response;
 }

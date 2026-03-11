@@ -9,12 +9,16 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mihiirdev.nymu"
+      "bundleIdentifier": "com.nymu.nymuApp",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.mihiirdev.nymu"
+      "package": "com.mihiirdev.nymu",
+      "permissions": ["android.permission.RECORD_AUDIO"]
     },
     "web": {
       "output": "static"

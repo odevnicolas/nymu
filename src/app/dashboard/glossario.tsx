@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function Glossario() {
   const glossaryItems = [
@@ -58,17 +58,25 @@ export default function Glossario() {
       </View>
 
       {/* Lista de termos */}
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        {glossaryItems.map((item, index) => (
-          <View key={item.id}>
-            <TouchableOpacity style={styles.glossaryItem} activeOpacity={0.7}>
+      <FlatList
+        data={glossaryItems}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.content}
+        renderItem={({ item, index }) => (
+          <View>
+            <TouchableOpacity 
+              style={styles.glossaryItem} 
+              activeOpacity={0.7}
+              accessibilityLabel={item.title}
+              accessibilityRole="button"
+            >
               <Text style={styles.glossaryText}>{item.title}</Text>
               <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
             </TouchableOpacity>
             {index < glossaryItems.length - 1 && <View style={styles.divider} />}
           </View>
-        ))}
-      </ScrollView>
+        )}
+      />
     </View>
   );
 }

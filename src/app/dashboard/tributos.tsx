@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function Tributos() {
   const tributos = [
@@ -100,25 +100,30 @@ export default function Tributos() {
         <Text style={styles.sectionTitle}>Vencimentos deste Mês</Text>
         <View style={styles.yellowLine} />
         
-        {tributos.map((tributo, index) => (
-          <View key={tributo.id}>
-            <View style={styles.tributoItem}>
-              <View style={[styles.tributoIcon, { backgroundColor: tributo.color }]}>
-                <Text style={styles.tributoLetter}>{tributo.letter}</Text>
-              </View>
-              
-              <View style={styles.tributoContent}>
-                <Text style={styles.tributoSigla}>{tributo.sigla}</Text>
-                <Text style={styles.tributoNome}>{tributo.nome}</Text>
-                <View style={styles.tributoFooter}>
-                  <Text style={styles.tributoVencimento}>{tributo.vencimento}</Text>
-                  <Text style={styles.tributoValor}>{tributo.valor}</Text>
+        <FlatList
+          data={tributos}
+          keyExtractor={(item) => item.id}
+          scrollEnabled={false}
+          renderItem={({ item: tributo, index }) => (
+            <View>
+              <View style={styles.tributoItem}>
+                <View style={[styles.tributoIcon, { backgroundColor: tributo.color }]}>
+                  <Text style={styles.tributoLetter}>{tributo.letter}</Text>
+                </View>
+                
+                <View style={styles.tributoContent}>
+                  <Text style={styles.tributoSigla}>{tributo.sigla}</Text>
+                  <Text style={styles.tributoNome}>{tributo.nome}</Text>
+                  <View style={styles.tributoFooter}>
+                    <Text style={styles.tributoVencimento}>{tributo.vencimento}</Text>
+                    <Text style={styles.tributoValor}>{tributo.valor}</Text>
+                  </View>
                 </View>
               </View>
+              {index < tributos.length - 1 && <View style={styles.divider} />}
             </View>
-            {index < tributos.length - 1 && <View style={styles.divider} />}
-          </View>
-        ))}
+          )}
+        />
       </View>
       </ScrollView>
     </View>

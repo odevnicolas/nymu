@@ -9,6 +9,7 @@ import {
   View,
   TouchableOpacity,
   ScrollView,
+  FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTomadores } from '@/contexts/tomadores-context';
@@ -299,12 +300,13 @@ export default function NotaFiscal() {
       </View>
 
       {/* Lista de Tomadores Filtrados */}
-      <ScrollView
+      <FlatList
+        data={tomadoresFiltrados}
+        keyExtractor={(item) => item.id}
         style={styles.listContainer}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-      >
-        {tomadoresFiltrados.length === 0 ? (
+        ListEmptyComponent={
           <View style={styles.emptyList}>
             <Ionicons 
               name={abaAtiva === 'PF' ? 'person-outline' : 'business-outline'} 
@@ -318,36 +320,38 @@ export default function NotaFiscal() {
               style={styles.emptyButton}
               onPress={handleOpenCadastroModal}
               activeOpacity={0.7}
+              accessibilityLabel={`Cadastrar ${abaAtiva === 'PF' ? 'Pessoa Física' : 'Pessoa Jurídica'}`}
+              accessibilityRole="button"
             >
               <Text style={styles.emptyButtonText}>Cadastrar {abaAtiva === 'PF' ? 'PF' : 'PJ'}</Text>
             </TouchableOpacity>
           </View>
-        ) : (
-          tomadoresFiltrados.map((tomador) => (
-            <TouchableOpacity
-              key={tomador.id}
-              style={styles.tomadorCard}
-              activeOpacity={0.7}
-              onPress={() => handleTomadorPress(tomador)}
-            >
-              {/* Informações */}
-              <View style={styles.tomadorInfo}>
-                <Text style={styles.tomadorNome} numberOfLines={1}>
-                  {tomador.nome}
-                </Text>
-                <Text style={styles.tomadorDocumento}>
-                  {tomador.tipo === 'PF'
-                    ? formatCPF(tomador.documento)
-                    : formatCNPJ(tomador.documento)}
-                </Text>
-              </View>
+        }
+        renderItem={({ item: tomador }) => (
+          <TouchableOpacity
+            style={styles.tomadorCard}
+            activeOpacity={0.7}
+            onPress={() => handleTomadorPress(tomador)}
+            accessibilityLabel={`Tomador ${tomador.nome}, ${tomador.tipo === 'PF' ? 'CPF' : 'CNPJ'}: ${tomador.tipo === 'PF' ? formatCPF(tomador.documento) : formatCNPJ(tomador.documento)}`}
+            accessibilityRole="button"
+          >
+            {/* Informações */}
+            <View style={styles.tomadorInfo}>
+              <Text style={styles.tomadorNome} numberOfLines={1}>
+                {tomador.nome}
+              </Text>
+              <Text style={styles.tomadorDocumento}>
+                {tomador.tipo === 'PF'
+                  ? formatCPF(tomador.documento)
+                  : formatCNPJ(tomador.documento)}
+              </Text>
+            </View>
 
-              {/* Seta */}
-              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-            </TouchableOpacity>
-          ))
+            {/* Seta */}
+            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+          </TouchableOpacity>
         )}
-      </ScrollView>
+      />
 
       {/* Modals */}
       <CadastroTomadorModal
