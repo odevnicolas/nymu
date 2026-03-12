@@ -1,27 +1,35 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useState } from "react";
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { FlatList, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useDocumentos } from "@/contexts/documentos-context";
+import { documentCategories, documentTypeLabels, DocumentType } from "@/lib/api/documentos";
 
 export default function Documentos() {
+  const { documentos, isLoading, refreshDocumentos } = useDocumentos();
   const [showDocumentoVazio, setShowDocumentoVazio] = useState(false);
 
-  const empresaDocuments = [
-    "CNPJ",
-    "Contrato Social",
-    "Inscrição Municipal",
-    "Simples Nacional",
-    "E-CNPJ",
-    "Termo",
-  ];
+  // Filtrar documentos por categoria
+  const documentosEmpresa = useMemo(() => {
+    return documentos.filter(doc => documentCategories.EMPRESA.includes(doc.type as any));
+  }, [documentos]);
 
-  const pessoaFisicaDocuments = [
-    "CNH",
-    "CRM",
-    "Título de Eleitor",
-  ];
+  const documentosPessoaFisica = useMemo(() => {
+    return documentos.filter(doc => documentCategories.PESSOA_FISICA.includes(doc.type as any));
+  }, [documentos]);
 
-  const handleDocumentPress = () => {
+  // Verificar se um tipo de documento já foi enviado
+  const isDocumentSent = (type: string) => {
+    return documentos.some(doc => doc.type === type);
+  };
+
+  const handleDocumentPress = (type: DocumentType) => {
+    // Se o documento já foi enviado, mostra detalhes
+    if (isDocumentSent(type)) {
+      // TODO: Implementar visualização do documento
+      return;
+    }
+    // Se não foi enviado, mostra tela de upload
     setShowDocumentoVazio(true);
   };
 
@@ -57,6 +65,47 @@ export default function Documentos() {
     );
   }
 
+  // Renderiza um item de documento
+  const renderDocumentItem = (type: DocumentType) => {
+    const sent = isDocumentSent(type);
+    const label = documentTypeLabels[type] || type;
+
+    return (
+      <View key={type}>
+        <TouchableOpacity
+          style={styles.documentItem}
+          activeOpacity={0.7}
+          onPress={() => handleDocumentPress(type)}
+          accessibilityLabel={`Documento ${label}`}
+          accessibilityRole="button"
+        >
+          <View style={[styles.iconContainer, sent && styles.iconContainerSent]}>
+            <Ionicons 
+              name={sent ? "checkmark-circle" : "document-text-outline"} 
+              size={20} 
+              color={sent ? "#10B981" : "#1F2937"} 
+            />
+          </View>
+          <Text style={[styles.documentText, sent && styles.documentTextSent]}>
+            {label}
+          </Text>
+          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+        </TouchableOpacity>
+        <View style={styles.divider} />
+      </View>
+    );
+  };
+
+  // Renderiza uma seção de documentos
+  const renderSection = (title: string, types: readonly string[]) => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={styles.yellowLine} />
+      
+      {types.map(type => renderDocumentItem(type as DocumentType))}
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -73,62 +122,15 @@ export default function Documentos() {
       </View>
 
       {/* Conteúdo */}
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        {/* Seção Empresa */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Empresa</Text>
-          <View style={styles.yellowLine} />
-          
-          <FlatList
-            data={empresaDocuments}
-            keyExtractor={(item) => item}
-            scrollEnabled={false}
-            renderItem={({ item: doc, index }) => (
-              <View>
-                <TouchableOpacity
-                  style={styles.documentItem}
-                  activeOpacity={0.7}
-                  onPress={handleDocumentPress}
-                  accessibilityLabel={`Documento ${doc}`}
-                  accessibilityRole="button"
-                >
-                  <Ionicons name="document-text-outline" size={20} color="#1F2937" />
-                  <Text style={styles.documentText}>{doc}</Text>
-                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-                </TouchableOpacity>
-                {index < empresaDocuments.length - 1 && <View style={styles.divider} />}
-              </View>
-            )}
-          />
-        </View>
-
-        {/* Seção Pessoa Física */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Pessoa Física</Text>
-          <View style={styles.yellowLine} />
-          
-          <FlatList
-            data={pessoaFisicaDocuments}
-            keyExtractor={(item) => item}
-            scrollEnabled={false}
-            renderItem={({ item: doc, index }) => (
-              <View>
-                <TouchableOpacity
-                  style={styles.documentItem}
-                  activeOpacity={0.7}
-                  onPress={handleDocumentPress}
-                  accessibilityLabel={`Documento ${doc}`}
-                  accessibilityRole="button"
-                >
-                  <Ionicons name="document-text-outline" size={20} color="#1F2937" />
-                  <Text style={styles.documentText}>{doc}</Text>
-                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-                </TouchableOpacity>
-                {index < pessoaFisicaDocuments.length - 1 && <View style={styles.divider} />}
-              </View>
-            )}
-          />
-        </View>
+      <ScrollView 
+        style={styles.scrollView} 
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={isLoading} onRefresh={() => refreshDocumentos()} />
+        }
+      >
+        {renderSection('Empresa', documentCategories.EMPRESA)}
+        {renderSection('Pessoa Física', documentCategories.PESSOA_FISICA)}
       </ScrollView>
     </View>
   );
@@ -194,16 +196,31 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     gap: 12,
   },
+  iconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  iconContainerSent: {
+    backgroundColor: "#D1FAE5",
+  },
   documentText: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: "Urbanist_500Medium",
     color: "#1F2937",
+    lineHeight: 20,
+  },
+  documentTextSent: {
+    color: "#10B981",
   },
   divider: {
     height: 1,
     backgroundColor: "#E5E7EB",
-    marginLeft: 32,
+    marginLeft: 44,
   },
   emptyDocumentScreen: {
     flex: 1,

@@ -60,7 +60,7 @@ export default function Tributos() {
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Total de Impostos</Text>
             <Text style={styles.summaryValue}>
-              {formatCurrencyValue(summary.totalImpostos * 100)}
+              {formatCurrencyValue(summary.totalImpostos)}
             </Text>
           </View>
           <View style={styles.summaryItem}>
@@ -73,13 +73,13 @@ export default function Tributos() {
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>DAS</Text>
             <Text style={styles.summaryValue}>
-              {formatCurrencyValue(summary.das * 100)}
+              {formatCurrencyValue(summary.das)}
             </Text>
           </View>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>DARF</Text>
             <Text style={styles.summaryValue}>
-              {formatCurrencyValue(summary.darf * 100)}
+              {formatCurrencyValue(summary.darf)}
             </Text>
           </View>
         </View>
@@ -178,16 +178,6 @@ export default function Tributos() {
                   >
                     <Ionicons name="help-circle-outline" size={32} color="#1F2937" />
                     <Text style={styles.quickButtonText}>Glossário</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity 
-                    style={styles.quickButton} 
-                    activeOpacity={0.7}
-                    accessibilityLabel="Upload de Arquivos"
-                    accessibilityRole="button"
-                  >
-                    <Ionicons name="folder-open-outline" size={32} color="#1F2937" />
-                    <Text style={styles.quickButtonText}>Upload{'\n'}de Arquivos</Text>
                   </TouchableOpacity>
                 </View>
               </View>

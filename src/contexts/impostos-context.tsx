@@ -3,6 +3,7 @@
  */
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { useAuthEventListener } from '@/hooks/use-auth-event';
 import { getToken, removeToken } from '@/lib/storage';
 import { 
   Imposto, 
@@ -56,10 +57,28 @@ export function ImpostosProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Carregar impostos ao montar o componente
+  // Carregar impostos ao montar o componente (se autenticado)
   useEffect(() => {
-    refreshImpostos();
+    const loadData = async () => {
+      const token = await getToken();
+      if (token) {
+        refreshImpostos();
+      }
+    };
+    
+    loadData();
   }, [refreshImpostos]);
+
+  // Ouvir eventos de login para recarregar dados
+  useAuthEventListener({
+    onLogin: () => {
+      refreshImpostos();
+    },
+    onLogout: () => {
+      setImpostos([]);
+      setSummary(null);
+    },
+  });
 
   const getImpostosByStatus = useCallback(
     (status: ImpostoStatus) => {

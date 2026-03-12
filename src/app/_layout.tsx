@@ -17,6 +17,7 @@ import { NotasFiscaisProvider } from '@/contexts/notas-fiscais-context';
 import { TomadoresProvider } from '@/contexts/tomadores-context';
 import { UserProvider } from '@/contexts/user-context';
 import { ImpostosProvider } from '@/contexts/impostos-context';
+import { DocumentosProvider } from '@/contexts/documentos-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { setupAuthInterceptor } from '@/lib/api/interceptors';
 
@@ -65,7 +66,8 @@ export default function RootLayout() {
       <TomadoresProvider>
         <NotasFiscaisProvider>
           <ImpostosProvider>
-            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <DocumentosProvider>
+              <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
               <Stack 
               screenOptions={{ 
                 headerShown: false,
@@ -82,6 +84,7 @@ export default function RootLayout() {
             </Stack>
             <StatusBar style="auto" />
             </ThemeProvider>
+            </DocumentosProvider>
           </ImpostosProvider>
         </NotasFiscaisProvider>
       </TomadoresProvider>

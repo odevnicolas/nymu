@@ -31,3 +31,7 @@ export { createTomador, deleteTomador, getTomadorById, listTomadores, updateToma
 // Notas Fiscais
 export { cancelNotaFiscal, createNotaFiscal, downloadPdf, downloadXml, getNotaFiscalById, getPdfUrl, getXmlUrl, listNotasFiscais } from './notas-fiscais';
 
+// Documentos
+export { documentCategories, documentTypeLabels, listDocuments } from './documentos';
+export type { Document, DocumentType, DocumentsResponse } from './documentos';
+

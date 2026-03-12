@@ -133,11 +133,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingTop: 24,
+    paddingTop: 8,
     paddingBottom: 40,
+    backgroundColor: "#FFFFFF",
   },
   section: {
     paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 8,
   },
   sectionTitle: {
     fontSize: 18,
@@ -154,19 +157,22 @@ const styles = StyleSheet.create({
   listItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 16,
-    gap: 12,
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    gap: 16,
+    backgroundColor: "#FFFFFF",
   },
   itemText: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: "Urbanist_500Medium",
     color: "#1F2937",
+    lineHeight: 20,
   },
   divider: {
     height: 1,
     backgroundColor: "#E5E7EB",
-    marginLeft: 32,
+    marginHorizontal: 24,
   },
   emptyDocumentScreen: {
     flex: 1,

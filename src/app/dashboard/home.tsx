@@ -121,13 +121,21 @@ export default function Home() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalScrollContent}
           >
-            <TouchableOpacity style={styles.actionButton} activeOpacity={0.7}>
+            <TouchableOpacity 
+              style={styles.actionButton} 
+              activeOpacity={0.7}
+              onPress={() => router.push("/dashboard/certidoes-negativas")}
+            >
               <Ionicons name="folder-open-outline" size={24} color="#000000" />
               <Text style={styles.buttonText}>Certidões Negativas</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionButton} activeOpacity={0.7}>
-              <Ionicons name="download-outline" size={24} color="#000000" />
+            <TouchableOpacity 
+              style={styles.actionButton} 
+              activeOpacity={0.7}
+              onPress={() => router.push("/dashboard/documentos")}
+            >
+              <Ionicons name="document-text-outline" size={24} color="#000000" />
               <Text style={styles.buttonText}>Documentos</Text>
             </TouchableOpacity>
 
