@@ -2,34 +2,34 @@
  * Modal de solicitação de nota fiscal
  */
 
-import React, { useEffect, useState, useRef } from 'react';
+import { SolicitarNotaFiscalFormData, Tomador } from '@/lib/api/types';
+import { formatCompetencia, formatCurrencyInput, parseCurrency } from '@/utils/formatters';
+import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+  Alert,
+  Dimensions,
+  Keyboard,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  Dimensions,
-  Alert,
-  Keyboard,
   TouchableWithoutFeedback,
+  View,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
-  runOnJS,
 } from 'react-native-reanimated';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Ionicons } from '@expo/vector-icons';
-import { Tomador, SolicitarNotaFiscalFormData } from '@/lib/api/types';
-import { formatCompetencia, formatCurrencyInput, parseCurrency } from '@/utils/formatters';
 
 interface SolicitarNFModalProps {
   visible: boolean;
@@ -200,17 +200,18 @@ export function SolicitarNFModal({ visible, onClose, onSubmit, tomador }: Solici
 
     setIsSubmitting(true);
 
-    try {
-      const formData: SolicitarNotaFiscalFormData = {
-        localPrestacao: localPrestacao.trim(),
-        competencia: competencia,
-        valor: parseCurrency(valor),
-        descricao: descricao.trim(),
-      };
+    const formData: SolicitarNotaFiscalFormData = {
+      localPrestacao: localPrestacao.trim(),
+      competencia: competencia,
+      valor: parseCurrency(valor),
+      descricao: descricao.trim(),
+    };
 
+    try {
       await onSubmit(formData);
       handleClose();
     } catch (error) {
+      // formData não inclui tomadorId nem os campos extras do POST /invoices — veja createNotaFiscal em lib/api/notas-fiscais.ts
       console.error('Erro ao solicitar nota fiscal:', error);
       Alert.alert('Erro', 'Não foi possível solicitar a nota fiscal. Tente novamente.');
     } finally {
@@ -237,11 +238,6 @@ export function SolicitarNFModal({ visible, onClose, onSubmit, tomador }: Solici
       onRequestClose={handleClose}
     >
       <GestureHandlerRootView style={styles.container}>
-        <KeyboardAvoidingView
-          style={styles.container}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 20}
-        >
           {/* Backdrop */}
           <TouchableWithoutFeedback onPress={() => {
             Keyboard.dismiss();
@@ -253,6 +249,11 @@ export function SolicitarNFModal({ visible, onClose, onSubmit, tomador }: Solici
           {/* Modal Content */}
           <GestureDetector gesture={panGesture}>
             <Animated.View style={[styles.modalContent, animatedModalStyle]}>
+              <KeyboardAvoidingView
+                style={styles.keyboardAvoid}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+              >
               {/* Handle */}
               <View style={styles.handle} />
 
@@ -404,9 +405,9 @@ export function SolicitarNFModal({ visible, onClose, onSubmit, tomador }: Solici
                   </Text>
                 </TouchableOpacity>
               </View>
+              </KeyboardAvoidingView>
             </Animated.View>
           </GestureDetector>
-        </KeyboardAvoidingView>
       </GestureHandlerRootView>
     </Modal>
   );
@@ -414,6 +415,9 @@ export function SolicitarNFModal({ visible, onClose, onSubmit, tomador }: Solici
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  keyboardAvoid: {
     flex: 1,
   },
   backdrop: {

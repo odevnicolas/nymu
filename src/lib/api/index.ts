@@ -17,7 +17,7 @@ export type {
 } from './types';
 
 // Cliente HTTP
-export { addHeaderInterceptor, apiRequest, clearHeaderInterceptors } from './client';
+export { addHeaderInterceptor, ApiHttpError, apiRequest, clearHeaderInterceptors } from './client';
 
 // Interceptors
 export { setupAuthInterceptor } from './interceptors';
@@ -32,6 +32,13 @@ export { createTomador, deleteTomador, getTomadorById, listTomadores, updateToma
 export { cancelNotaFiscal, createNotaFiscal, downloadPdf, downloadXml, getNotaFiscalById, getPdfUrl, getXmlUrl, listNotasFiscais } from './notas-fiscais';
 
 // Documentos
-export { documentCategories, documentTypeLabels, listDocuments } from './documentos';
-export type { Document, DocumentType, DocumentsResponse } from './documentos';
+export {
+  ALL_DOCUMENT_TYPES,
+  documentCategories,
+  documentTypeLabels,
+  listAllDocumentsForClient,
+  listDocuments,
+  logDocumentosRespostaErroBackend,
+} from './documentos';
+export type { Document, DocumentType, DocumentsResponse, ListDocumentsParams } from './documentos';
 

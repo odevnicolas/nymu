@@ -7,6 +7,7 @@ import { NotaFiscal, NotaFiscalStatus } from '@/lib/api/types';
 import * as notasFiscaisAPI from '@/lib/api/notas-fiscais';
 import { getToken, removeToken } from '@/lib/storage';
 import { useAuthEventListener } from '@/hooks/use-auth-event';
+import { useUser } from '@/contexts/user-context';
 
 interface NotasFiscaisContextData {
   notasFiscais: NotaFiscal[];
@@ -27,6 +28,7 @@ interface NotasFiscaisContextData {
 const NotasFiscaisContext = createContext<NotasFiscaisContextData>({} as NotasFiscaisContextData);
 
 export function NotasFiscaisProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useUser();
   const [notasFiscais, setNotasFiscais] = useState<NotaFiscal[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -91,10 +93,17 @@ export function NotasFiscaisProvider({ children }: { children: React.ReactNode }
       valor: number;
       descricao: string;
     }) => {
+      if (!user?.id) {
+        throw new Error('Usuário não identificado. Faça login novamente.');
+      }
+
       setIsLoading(true);
 
       try {
-        const newNotaFiscal = await notasFiscaisAPI.createNotaFiscal(data);
+        const newNotaFiscal = await notasFiscaisAPI.createNotaFiscal({
+          userId: user.id,
+          ...data,
+        });
         setNotasFiscais(prev => [newNotaFiscal, ...prev]);
       } catch (error) {
         console.error('Erro ao solicitar nota fiscal:', error);
@@ -103,7 +112,7 @@ export function NotasFiscaisProvider({ children }: { children: React.ReactNode }
         setIsLoading(false);
       }
     },
-    []
+    [user?.id]
   );
 
   /**

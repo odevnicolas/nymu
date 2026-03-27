@@ -6,8 +6,22 @@
  */
 
 import { router } from 'expo-router';
-import { ApiErrorResponse } from './types';
 import { getToken, removeToken } from '../storage/token';
+
+/**
+ * Erro HTTP com metadados da resposta (útil para logs e diagnóstico).
+ */
+export class ApiHttpError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly url: string,
+    public readonly body?: unknown
+  ) {
+    super(message);
+    this.name = 'ApiHttpError';
+  }
+}
 
 /**
  * Tipo para função de interceptor de headers
@@ -46,26 +60,30 @@ export function clearHeaderInterceptors(): void {
 }
 
 /**
- * Trata erros de resposta da API
- * 
- * @param response - Resposta do fetch
- * @returns Promise com o JSON de erro ou lança exceção
+ * Lê o corpo da resposta de erro (JSON ou texto) para logs e ApiHttpError.body
  */
-async function handleApiError(response: Response): Promise<ApiErrorResponse> {
-  let errorData: ApiErrorResponse;
-  
-  try {
-    errorData = await response.json();
-  } catch {
-    // Se não conseguir parsear JSON, cria um erro genérico
-    errorData = {
+async function handleApiError(response: Response): Promise<Record<string, unknown>> {
+  const text = await response.text();
+  const trimmed = text.trim();
+
+  if (!trimmed) {
+    return {
       statusCode: response.status,
-      message: `Erro ${response.status}: ${response.statusText}`,
-      error: 'Erro desconhecido',
+      message: response.statusText || 'Resposta vazia',
+      error: 'empty_body',
     };
   }
-  
-  return errorData;
+
+  try {
+    return JSON.parse(trimmed) as Record<string, unknown>;
+  } catch {
+    return {
+      statusCode: response.status,
+      message: trimmed.slice(0, 500),
+      error: 'non_json_response',
+      rawBody: trimmed.length > 4000 ? `${trimmed.slice(0, 4000)}…` : trimmed,
+    };
+  }
 }
 
 /**
@@ -118,11 +136,25 @@ export async function apiRequest<T>(
       const error = await handleApiError(response);
 
       // Se a mensagem for um array (validação), junta as mensagens
-      const errorMessage = Array.isArray(error.message)
-        ? error.message.join(', ')
-        : error.message;
+      let errorMessage = Array.isArray(error.message)
+        ? error.message.filter((m) => m != null && String(m).trim()).join(', ')
+        : typeof error.message === 'string'
+          ? error.message.trim()
+          : '';
 
-      throw new Error(errorMessage || `Erro ${response.status}: ${response.statusText}`);
+      if (!errorMessage && typeof error.error === 'string' && error.error.trim()) {
+        errorMessage = error.error.trim();
+      }
+
+      if (!errorMessage) {
+        errorMessage = JSON.stringify(error);
+      }
+
+      if (!errorMessage || errorMessage === '{}') {
+        errorMessage = `Erro ${response.status}: ${response.statusText || 'Resposta inválida do servidor'}`;
+      }
+
+      throw new ApiHttpError(errorMessage, response.status, url, error as unknown);
     }
 
     return await response.json();

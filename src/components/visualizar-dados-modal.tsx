@@ -128,10 +128,13 @@ export function VisualizarDadosModal({ visible, onClose, tomador }: VisualizarDa
         </TouchableOpacity>
 
         {/* Modal Content */}
-        <GestureDetector gesture={panGesture}>
-          <Animated.View style={[styles.modalContent, animatedModalStyle]}>
+        <Animated.View style={[styles.modalContent, animatedModalStyle]}>
             {/* Handle */}
-            <View style={styles.handle} />
+            <GestureDetector gesture={panGesture}>
+            <View style={styles.handleArea}>
+              <View style={styles.handle} />
+            </View>
+          </GestureDetector>
 
             {/* Header */}
             <View style={styles.header}>
@@ -299,8 +302,7 @@ export function VisualizarDadosModal({ visible, onClose, tomador }: VisualizarDa
                 <Text style={styles.closeFooterButtonText}>Fechar</Text>
               </TouchableOpacity>
             </View>
-          </Animated.View>
-        </GestureDetector>
+        </Animated.View>
       </GestureHandlerRootView>
     </Modal>
   );
@@ -325,13 +327,15 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     paddingTop: 8,
   },
+  handleArea: {
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
   handle: {
     width: 40,
     height: 4,
     backgroundColor: '#E5E7EB',
     borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: 16,
   },
   header: {
     paddingHorizontal: 24,

@@ -1,64 +1,125 @@
 /**
  * Context para gerenciar o estado global de documentos
+ *
+ * O endpoint de listagem só é chamado ao abrir um tipo específico (toque na lista)
+ * ou ao puxar para atualizar (apenas tipos já consultados antes).
  */
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { Document, DocumentType, listDocuments } from '@/lib/api/documentos';
+import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
+import {
+  Document,
+  DocumentType,
+  listDocuments,
+  logDocumentosRespostaErroBackend,
+} from '@/lib/api/documentos';
+import { getClientIdFromToken } from '@/lib/auth/client-id';
 import { getToken, removeToken } from '@/lib/storage';
 import { useAuthEventListener } from '@/hooks/use-auth-event';
+import { useUser } from '@/contexts/user-context';
 
 interface DocumentosContextData {
   documentos: Document[];
-  isLoading: boolean;
-  refreshDocumentos: (type?: DocumentType) => Promise<void>;
+  /** Tipo em carregamento após toque (null = nenhum) */
+  loadingTipo: DocumentType | null;
+  isRefreshing: boolean;
+  carregarDocumentosDoTipo: (type: DocumentType) => Promise<Document[]>;
+  refreshDocumentos: () => Promise<void>;
 }
 
 const DocumentosContext = createContext<DocumentosContextData>({} as DocumentosContextData);
 
 export function DocumentosProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useUser();
   const [documentos, setDocumentos] = useState<Document[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingTipo, setLoadingTipo] = useState<DocumentType | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const tiposConsultadosRef = useRef<Set<DocumentType>>(new Set());
 
-  const refreshDocumentos = useCallback(async (type?: DocumentType) => {
+  const carregarDocumentosDoTipo = useCallback(
+    async (type: DocumentType): Promise<Document[]> => {
+      const token = await getToken();
+      if (!token) {
+        return [];
+      }
+
+      setLoadingTipo(type);
+
+      try {
+        const userId = user?.id ?? getClientIdFromToken(token);
+        const response = await listDocuments({ type, userId, quiet: true });
+        const incoming = response.documents ?? [];
+
+        setDocumentos((prev) => {
+          const withoutType = prev.filter((d) => d.type !== type);
+          return [...withoutType, ...incoming];
+        });
+        tiposConsultadosRef.current.add(type);
+
+        if (response.error) {
+          logDocumentosRespostaErroBackend('resposta de erro do backend (listagem por tipo)', type, response.error);
+        }
+
+        return incoming;
+      } catch (error) {
+        const is401 = error instanceof Error && error.message.includes('401');
+        if (is401) {
+          await removeToken();
+        } else {
+          console.error('Erro ao carregar documentos:', error);
+        }
+        return [];
+      } finally {
+        setLoadingTipo(null);
+      }
+    },
+    [user?.id]
+  );
+
+  const refreshDocumentos = useCallback(async () => {
     const token = await getToken();
     if (!token) {
       return;
     }
-
-    setIsLoading(true);
-
-    try {
-      const response = await listDocuments(type);
-      setDocumentos(response.documents || []);
-    } catch (error) {
-      const is401 = error instanceof Error && error.message.includes('401');
-      if (is401) {
-        await removeToken();
-      } else {
-        console.error('Erro ao carregar documentos:', error);
-      }
-    } finally {
-      setIsLoading(false);
+    const types = Array.from(tiposConsultadosRef.current);
+    if (types.length === 0) {
+      return;
     }
-  }, []);
 
-  useEffect(() => {
-    const loadData = async () => {
-      const token = await getToken();
-      if (token) {
-        refreshDocumentos();
+    setIsRefreshing(true);
+    try {
+      const userId = user?.id ?? getClientIdFromToken(token);
+      const results = await Promise.all(
+        types.map((type) => listDocuments({ type, userId, quiet: true }))
+      );
+
+      setDocumentos((prev) => {
+        const withoutReloaded = prev.filter((d) => !types.includes(d.type));
+        const merged = [...withoutReloaded];
+        for (const r of results) {
+          merged.push(...r.documents);
+        }
+        return merged;
+      });
+
+      const primeiroErro = results.find((r) => r.error)?.error;
+      if (primeiroErro) {
+        logDocumentosRespostaErroBackend(
+          'resposta de erro do backend (atualizar lista)',
+          types.join(', '),
+          primeiroErro
+        );
       }
-    };
-
-    loadData();
-  }, [refreshDocumentos]);
+    } catch (error) {
+      console.error('Erro ao atualizar documentos:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [user?.id]);
 
   useAuthEventListener({
-    onLogin: () => {
-      refreshDocumentos();
-    },
     onLogout: () => {
       setDocumentos([]);
+      tiposConsultadosRef.current = new Set();
     },
   });
 
@@ -66,7 +127,9 @@ export function DocumentosProvider({ children }: { children: React.ReactNode }) 
     <DocumentosContext.Provider
       value={{
         documentos,
-        isLoading,
+        loadingTipo,
+        isRefreshing,
+        carregarDocumentosDoTipo,
         refreshDocumentos,
       }}
     >

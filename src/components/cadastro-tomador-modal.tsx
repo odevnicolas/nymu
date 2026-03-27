@@ -80,6 +80,7 @@ export function CadastroTomadorModal({
   const [ufError, setUfError] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFetchingCep, setIsFetchingCep] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
   // Animações (subida suave na abertura, sem bounce)
@@ -273,6 +274,31 @@ export function CadastroTomadorModal({
     }
   };
 
+  const fetchCepData = async (rawCep: string) => {
+    setIsFetchingCep(true);
+    setCepError('');
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${rawCep}/json/`);
+      const data = await response.json();
+      if (data.erro) {
+        setCepError('CEP não encontrado');
+        return;
+      }
+      if (data.logradouro) setLogradouro(data.logradouro);
+      if (data.bairro) setBairro(data.bairro);
+      if (data.localidade) setCidade(data.localidade);
+      if (data.uf) setUf(data.uf);
+      setLogradouroError('');
+      setBairroError('');
+      setCidadeError('');
+      setUfError('');
+    } catch {
+      setCepError('Erro ao buscar CEP');
+    } finally {
+      setIsFetchingCep(false);
+    }
+  };
+
   const handleTipoChange = (newTipo: 'PF' | 'PJ') => {
     setTipo(newTipo);
     setDocumento('');
@@ -455,16 +481,19 @@ export function CadastroTomadorModal({
                     </Text>
                     <TextInput
                       style={[styles.input, cepError && styles.inputError]}
-                      value={cep}
+                      value={isFetchingCep ? 'Buscando...' : cep}
                       onChangeText={(text) => {
-                        setCep(formatCEP(text));
-                        if (cleanDocument(text).length === 8) setCepError('');
+                        const formatted = formatCEP(text);
+                        setCep(formatted);
+                        const clean = cleanDocument(text);
+                        if (clean.length === 8) fetchCepData(clean);
                       }}
                       placeholder="00000-000"
                       placeholderTextColor="#9CA3AF"
                       keyboardType="number-pad"
                       maxLength={9}
                       returnKeyType="next"
+                      editable={!isFetchingCep}
                     />
                     {cepError ? <Text style={styles.errorText}>{cepError}</Text> : null}
                   </View>

@@ -57,5 +57,5 @@ export const apiEndpoints = {
   notifications: `${API_URL}/notifications`,
 
   // Documentos
-  documents: `${API_URL}/api/documents`,
+  documents: `${API_URL}/documents`,
 } as const;

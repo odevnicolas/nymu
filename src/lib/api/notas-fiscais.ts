@@ -10,6 +10,7 @@ import { NotaFiscal, SolicitarNotaFiscalFormData } from './types';
  * Cria/solicita uma nova nota fiscal
  */
 export async function createNotaFiscal(data: {
+  userId: string;
   tomadorId: string;
   localPrestacao: string;
   competencia: string;
@@ -18,6 +19,7 @@ export async function createNotaFiscal(data: {
 }): Promise<NotaFiscal> {
   const requestBody = {
     type: 'NFSE', // Padrão do sistema
+    userId: data.userId,
     tomadorId: data.tomadorId,
     localPrestacao: data.localPrestacao,
     competencia: data.competencia, // Formato MM/YYYY
@@ -26,6 +28,9 @@ export async function createNotaFiscal(data: {
     issRetention: false,
     observations: '',
   };
+
+  // Mesmo JSON enviado no body do POST /invoices
+  console.log('[POST /invoices]', JSON.stringify(requestBody));
 
   const response = await apiRequest<{
     status: string;
