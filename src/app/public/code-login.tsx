@@ -7,6 +7,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function CodeLogin() {
   const [code, setCode] = useState('');
+  const [codeError, setCodeError] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
@@ -64,6 +65,14 @@ export default function CodeLogin() {
 
   const closeModal = () => {
     setModalVisible(false);
+  };
+
+  const handleVerificarCodigo = () => {
+    if (!code.trim()) {
+      setCodeError(true);
+      return;
+    }
+    router.push('/public/sign-up');
   };
 
   const panResponder = useRef(
@@ -135,25 +144,35 @@ export default function CodeLogin() {
           </View>
 
           <View style={styles.buttonsContainer}>
-            <View style={styles.codeInputContainer}>
-              <Ionicons name="person-outline" size={24} color="#6B7280" style={styles.inputIcon} />
+            <View style={[styles.codeInputContainer, codeError && styles.codeInputContainerError]}>
+              <Ionicons name="person-outline" size={24} color={codeError ? '#EF4444' : '#6B7280'} style={styles.inputIcon} />
               <TextInput
                 style={styles.codeInput}
                 placeholder="Digite o código recebido"
                 value={code}
-                onChangeText={setCode}
+                onChangeText={(text) => { setCode(text.replace(/[^0-9]/g, '').slice(0, 6)); setCodeError(false); }}
                 placeholderTextColor="#9CA3AF"
+                keyboardType="number-pad"
+                maxLength={6}
               />
             </View>
+            {codeError && (
+              <Text style={styles.errorText}>Por favor, digite o código recebido.</Text>
+            )}
 
             <View style={styles.codeActionsContainer}>
-              <Text style={styles.forgotCodeText}>Esqueceu seu código?</Text>
+              <TouchableOpacity onPress={() => router.push('/public/forgot-password' as any)}>
+                <Text style={styles.forgotCodeText}>
+                  <Text style={{ color: '#6B7280', fontFamily: 'Urbanist_400Regular' }}>Esqueceu seu código? </Text>
+                  Recuperar!
+                </Text>
+              </TouchableOpacity>
               
               <View style={styles.codeButtonsContainer}>
                 <TouchableOpacity 
                   style={styles.primaryButton}
                   activeOpacity={0.8}
-                  onPress={() => router.push('/public/sign-up')}
+                  onPress={handleVerificarCodigo}
                 >
                   <Text style={styles.primaryButtonText}>Verificar Código</Text>
                 </TouchableOpacity>
@@ -351,6 +370,9 @@ const styles = StyleSheet.create({
     borderBottomColor: '#6B7280',
     paddingVertical: 12,
   },
+  codeInputContainerError: {
+    borderBottomColor: '#EF4444',
+  },
   inputIcon: {
     marginRight: 12,
   },
@@ -360,6 +382,36 @@ const styles = StyleSheet.create({
     fontFamily: 'Urbanist_400Regular',
     color: '#2D3648',
     paddingVertical: 8,
+  },
+  otpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  otpBox: {
+    flex: 1,
+    height: 56,
+    borderWidth: 1.5,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    textAlign: 'center',
+    fontSize: 22,
+    fontFamily: 'Urbanist_600SemiBold',
+    color: '#2D3648',
+    backgroundColor: '#F9FAFB',
+  },
+  otpBoxFilled: {
+    borderColor: '#333333',
+    backgroundColor: '#FFFFFF',
+  },
+  otpBoxError: {
+    borderColor: '#EF4444',
+  },
+  errorText: {
+    fontSize: 13,
+    fontFamily: 'Urbanist_400Regular',
+    color: '#EF4444',
+    marginTop: 4,
   },
   codeActionsContainer: {
     width: '100%',

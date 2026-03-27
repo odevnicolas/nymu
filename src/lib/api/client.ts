@@ -5,8 +5,9 @@
  * Suporta interceptors para adicionar headers automaticamente (ex: token)
  */
 
+import { router } from 'expo-router';
 import { ApiErrorResponse } from './types';
-import { getToken } from '../storage/token';
+import { getToken, removeToken } from '../storage/token';
 
 /**
  * Tipo para função de interceptor de headers
@@ -108,13 +109,19 @@ export async function apiRequest<T>(
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        await removeToken();
+        router.replace('/public/login');
+        throw new Error('Sessão expirada. Faça login novamente.');
+      }
+
       const error = await handleApiError(response);
-      
+
       // Se a mensagem for um array (validação), junta as mensagens
       const errorMessage = Array.isArray(error.message)
         ? error.message.join(', ')
         : error.message;
-      
+
       throw new Error(errorMessage || `Erro ${response.status}: ${response.statusText}`);
     }
 

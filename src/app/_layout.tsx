@@ -76,10 +76,11 @@ export default function RootLayout() {
               }}
             >
               <Stack.Screen name="index" />
-              <Stack.Screen name="public/onboarding" />
+              <Stack.Screen name="public/onboarding" options={{ contentStyle: { backgroundColor: 'transparent' } }} />
               <Stack.Screen name="public/login" />
               <Stack.Screen name="public/code-login" />
               <Stack.Screen name="public/sign-up" />
+              <Stack.Screen name="public/forgot-password" />
               <Stack.Screen name="dashboard" options={{ headerShown: false }} />
             </Stack>
             <StatusBar style="auto" />

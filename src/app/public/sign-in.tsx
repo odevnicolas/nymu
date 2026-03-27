@@ -220,9 +220,12 @@ export default function SignIn() {
             </View>
 
             <View style={styles.codeActionsContainer}>
-              <Text style={styles.forgotCodeText}>
-                Esqueceu a senha? Recuperar!
-              </Text>
+              <TouchableOpacity onPress={() => router.push('/public/forgot-password' as any)}>
+                <Text style={styles.forgotCodeText}>
+                  <Text style={{ color: '#6B7280', fontFamily: 'Urbanist_400Regular' }}>Esqueceu a senha? </Text>
+                  Recuperar!
+                </Text>
+              </TouchableOpacity>
               {authError && (
                 <Text style={styles.authErrorText}>{authError}</Text>
               )}

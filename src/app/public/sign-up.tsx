@@ -116,21 +116,24 @@ export default function SignUp() {
           )}
 
           {/* Terms Checkbox */}
-          <TouchableOpacity 
-            style={styles.checkboxContainer}
-            onPress={() => setAgreedToTerms(!agreedToTerms)}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.checkbox, agreedToTerms && styles.checkboxChecked]}>
-              {agreedToTerms && (
-                <Ionicons name="checkmark" size={16} color="#FFFFFF" />
-              )}
-            </View>
+          <View style={styles.checkboxContainer}>
+            <TouchableOpacity
+              onPress={() => setAgreedToTerms(!agreedToTerms)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.checkbox, agreedToTerms && styles.checkboxChecked]}>
+                {agreedToTerms && (
+                  <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                )}
+              </View>
+            </TouchableOpacity>
             <Text style={styles.checkboxText}>
-              Eu concordo com os <Text style={styles.linkText}>Termos de Serviços</Text> e{'\n'}
-              <Text style={styles.linkText}>Política de Privacidade</Text>
+              Eu concordo com os{' '}
+              <Text style={styles.linkText} onPress={() => router.push('/public/terms' as any)}>Termos de Serviços</Text>
+              {' '}e{'\n'}
+              <Text style={styles.linkText} onPress={() => router.push('/public/terms' as any)}>Política de Privacidade</Text>
             </Text>
-          </TouchableOpacity>
+          </View>
 
           {/* Submit Button */}
           <TouchableOpacity 

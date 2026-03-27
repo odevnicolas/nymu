@@ -19,7 +19,7 @@ export default function TermosVersao() {
       </View>
 
       {/* Conteúdo */}
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content} bounces={false} overScrollMode="never">
         <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
           <Ionicons name="document-text-outline" size={20} color="#1F2937" />
           <Text style={styles.menuText}>Termo de Uso</Text>

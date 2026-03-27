@@ -16,12 +16,12 @@ export default function Index() {
         // Verificar se há token de autenticação
         const token = await getToken();
 
-        if (hasSeenOnboarding) {
-          // Se já viu o onboarding, ir para login
-          setRedirectTo('/public/login');
-        } else {
-          // Se não viu o onboarding, ir para onboarding
+        if (!hasSeenOnboarding) {
           setRedirectTo('/public/onboarding');
+        } else if (token) {
+          setRedirectTo('/dashboard');
+        } else {
+          setRedirectTo('/public/login');
         }
       } catch (error) {
         console.warn('Erro ao verificar rota inicial:', error);

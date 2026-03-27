@@ -8,7 +8,7 @@
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-export { saveToken, getToken, removeToken } from './token';
+export { getToken, removeToken, saveToken } from './token';
 
 // Chaves para storage (SecureStore requer apenas [a-zA-Z0-9._-])
 const ONBOARDING_KEY = 'nymu_onboarding';
@@ -49,6 +49,8 @@ export async function getOnboardingCompleted(): Promise<boolean> {
     }
 
     const value = await SecureStore.getItemAsync(ONBOARDING_KEY);
+
+    console.log('value', value);
     return value === 'true';
   } catch (error) {
     console.warn('Erro ao verificar onboarding:', error);

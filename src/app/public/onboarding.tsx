@@ -2,6 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { saveOnboardingCompleted } from "@/lib/storage";
 
 const ONBOARDING_DATA = [
@@ -27,6 +29,7 @@ const ONBOARDING_DATA = [
 
 export default function Onboarding() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const insets = useSafeAreaInsets();
 
   const handleNext = async () => {
     if (currentIndex < ONBOARDING_DATA.length - 1) {
@@ -43,12 +46,13 @@ export default function Onboarding() {
 
   return (
     <View style={styles.container}>
+      <StatusBar style="dark" translucent backgroundColor="transparent" />
       <View style={styles.slideContainer}>
-        <View style={styles.imageContainer}>
+        <View style={[styles.imageContainer, { marginTop: -insets.top }]}>
           <Image 
             source={currentItem.image} 
             style={styles.image}
-            resizeMode="contain"
+            resizeMode="cover"
           />
         </View>
 
