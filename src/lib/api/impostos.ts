@@ -4,6 +4,7 @@
 
 import { apiRequest } from './client';
 import { apiEndpoints } from './config';
+import { getToken } from '../storage';
 
 /**
  * Status do imposto/tributo
@@ -39,6 +40,12 @@ export interface ImpostoSummary {
   qtdBoletos: number;
   das: number;
   darf: number;
+}
+
+export interface TaxDocumentDownloadResult {
+  fileBytes: ArrayBuffer;
+  contentType: string;
+  filename: string;
 }
 
 /**
@@ -124,11 +131,75 @@ export async function getImpostosSummary(): Promise<ImpostoSummary> {
   }
 }
 
+function getFilenameFromDisposition(contentDisposition: string | null, taxId: string): string {
+  if (!contentDisposition) {
+    return `tax-${taxId}.pdf`;
+  }
+
+  // Ex.: attachment; filename="das-documento.pdf"
+  const simpleMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+  if (simpleMatch?.[1]) {
+    return simpleMatch[1];
+  }
+
+  // Ex.: filename*=UTF-8''das-documento.pdf
+  const encodedMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+  if (encodedMatch?.[1]) {
+    try {
+      return decodeURIComponent(encodedMatch[1]);
+    } catch {
+      return encodedMatch[1];
+    }
+  }
+
+  return `tax-${taxId}.pdf`;
+}
+
 /**
- * Converte valor de centavos para reais
+ * Baixa o documento do imposto (PDF/imagem) como binário.
+ * Retorna null quando documento não está disponível (404).
  */
-export function formatCurrencyValue(cents: number): string {
-  return (cents / 100).toLocaleString('pt-BR', {
+export async function downloadTaxDocument(taxId: string): Promise<TaxDocumentDownloadResult | null> {
+  const token = await getToken();
+
+  if (!token) {
+    throw new Error('Sessão expirada. Faça login novamente.');
+  }
+
+  const response = await fetch(apiEndpoints.taxDocument(taxId), {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('Não autenticado. Faça login novamente.');
+    }
+    if (response.status === 403) {
+      throw new Error('Você não tem permissão para acessar este documento.');
+    }
+    throw new Error('Erro ao baixar documento do imposto.');
+  }
+
+  const fileBytes = await response.arrayBuffer();
+  const contentType = response.headers.get('content-type') || 'application/octet-stream';
+  const filename = getFilenameFromDisposition(response.headers.get('content-disposition'), taxId);
+
+  return { fileBytes, contentType, filename };
+}
+
+/**
+ * Formata valor monetário em BRL.
+ * O backend já retorna em reais (ex.: 293.32).
+ */
+export function formatCurrencyValue(value: number): string {
+  return Number(value || 0).toLocaleString('pt-BR', {
     style: 'currency',
     currency: 'BRL',
   });

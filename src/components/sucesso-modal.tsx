@@ -103,7 +103,7 @@ export function SucessoModal({
       transparent
       animationType="none"
       statusBarTranslucent
-      onRequestClose={handleClose}
+      onRequestClose={() => {}}
     >
       <View style={styles.container}>
         {/* Backdrop */}

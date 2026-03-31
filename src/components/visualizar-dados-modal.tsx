@@ -115,7 +115,7 @@ export function VisualizarDadosModal({ visible, onClose, tomador }: VisualizarDa
       transparent
       animationType="none"
       statusBarTranslucent
-      onRequestClose={handleClose}
+      onRequestClose={() => {}}
     >
       <GestureHandlerRootView style={styles.container}>
         {/* Backdrop */}

@@ -9,6 +9,7 @@ import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
 export { getToken, removeToken, saveToken } from './token';
+export { saveUserCache, getUserCache, clearUserCache } from './user-cache';
 
 // Chaves para storage (SecureStore requer apenas [a-zA-Z0-9._-])
 const ONBOARDING_KEY = 'nymu_onboarding';

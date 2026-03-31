@@ -69,7 +69,7 @@ export function CancelarNFModal({
       transparent
       animationType="fade"
       statusBarTranslucent
-      onRequestClose={handleClose}
+      onRequestClose={() => {}}
     >
       <KeyboardAvoidingView
         style={styles.container}

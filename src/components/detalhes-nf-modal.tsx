@@ -80,7 +80,7 @@ export function DetalhesNFModal({
       transparent
       animationType="fade"
       statusBarTranslucent
-      onRequestClose={onClose}
+      onRequestClose={() => {}}
     >
       <View style={styles.container}>
         {/* Backdrop */}

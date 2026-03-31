@@ -1,24 +1,92 @@
 import { Ionicons } from "@expo/vector-icons";
+import { File, Paths } from "expo-file-system";
+import * as Linking from "expo-linking";
 import { router } from "expo-router";
-import { 
-  FlatList, 
-  StyleSheet, 
-  Text, 
-  TouchableOpacity, 
+import { useCallback, useState } from "react";
+import {
+  Alert,
+  FlatList,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
   View,
   RefreshControl,
 } from "react-native";
+import { WebView } from "react-native-webview";
+import { Modal } from "react-native";
 import { useImpostos } from "@/contexts/impostos-context";
-import { 
-  formatCurrencyValue, 
-  formatVencimento, 
-  getStatusColor, 
-  getLetter 
+import {
+  type Imposto,
+  downloadTaxDocument,
+  formatCurrencyValue,
+  formatVencimento,
+  getStatusColor,
+  getLetter
 } from "@/lib/api/impostos";
+import { isPdfDataUrl } from "@/lib/documentos/data-url";
 import { SummaryCardSkeleton, ImpostosListSkeleton } from "@/components/ui/skeleton";
 
 export default function Tributos() {
   const { impostos, summary, isLoading, refreshImpostos } = useImpostos();
+  const [downloadingTaxId, setDownloadingTaxId] = useState<string | null>(null);
+  const [pdfFileUri, setPdfFileUri] = useState<string | null>(null);
+
+  const openTaxDocument = useCallback(async (tributo: Imposto) => {
+    console.log("[tributos] item pressionado:", tributo);
+
+    if (!tributo.url) {
+      Alert.alert("Aviso", "Boleto indisponível no momento.");
+      return;
+    }
+
+    // Se já temos o PDF em base64, abrir diretamente sem chamada extra à API
+    if (isPdfDataUrl(tributo.url)) {
+      try {
+        const base64 = tributo.url.replace(/^data:[^;]+;base64,/i, "");
+        const safeFilename = `tax-${tributo.id}.pdf`;
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        const file = new File(Paths.cache, safeFilename);
+        file.write(bytes);
+        if (Platform.OS === "ios") {
+          setPdfFileUri(file.uri);
+        } else {
+          await Linking.openURL(file.uri);
+        }
+      } catch (err) {
+        Alert.alert("Erro", "Não foi possível abrir o documento PDF.");
+      }
+      return;
+    }
+
+    try {
+      setDownloadingTaxId(tributo.id);
+      const result = await downloadTaxDocument(tributo.id);
+
+      if (!result) {
+        Alert.alert("Aviso", "Documento não disponível para este imposto.");
+        return;
+      }
+
+      const safeFilename = result.filename.replace(/[^a-z0-9._-]/gi, "_");
+      const file = new File(Paths.cache, safeFilename);
+      file.write(new Uint8Array(result.fileBytes));
+
+      await Linking.openURL(file.uri);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Não foi possível baixar o documento. Tente novamente.";
+      Alert.alert("Erro", message);
+    } finally {
+      setDownloadingTaxId(null);
+    }
+  }, []);
 
   // Função para renderizar o card de resumo
   const renderSummaryCard = () => {
@@ -109,11 +177,13 @@ export default function Tributos() {
   );
 
   // Função para renderizar cada item
-  const renderItem = ({ item: tributo, index }: { item: any; index: number }) => (
+  const renderItem = ({ item: tributo, index }: { item: Imposto; index: number }) => (
     <View>
       <TouchableOpacity
         style={styles.tributoItem}
         activeOpacity={0.7}
+        onPress={() => openTaxDocument(tributo)}
+        disabled={downloadingTaxId === tributo.id}
         accessibilityLabel={`${tributo.sigla} - ${formatCurrencyValue(tributo.valor)}`}
         accessibilityRole="button"
       >
@@ -124,6 +194,9 @@ export default function Tributos() {
         <View style={styles.tributoContent}>
           <Text style={styles.tributoSigla}>{tributo.sigla}</Text>
           <Text style={styles.tributoNome} numberOfLines={2}>{tributo.nome}</Text>
+          {!tributo.url && (
+            <Text style={styles.tributoUnavailable}>Boleto indisponível</Text>
+          )}
           <View style={styles.tributoFooter}>
             <Text style={styles.tributoVencimento}>
               {formatVencimento(tributo.dataVencimento)}
@@ -192,6 +265,32 @@ export default function Tributos() {
         }
         renderItem={renderItem}
       />
+
+      {/* Modal de PDF para iOS */}
+      <Modal
+        visible={pdfFileUri != null}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setPdfFileUri(null)}
+      >
+        <View style={styles.pdfModalRoot}>
+          <TouchableOpacity
+            style={styles.pdfModalClose}
+            onPress={() => setPdfFileUri(null)}
+            accessibilityRole="button"
+            accessibilityLabel="Fechar visualização"
+          >
+            <Ionicons name="close" size={26} color="#1F2937" />
+          </TouchableOpacity>
+          {pdfFileUri && (
+            <WebView
+              source={{ uri: pdfFileUri }}
+              style={styles.pdfWebView}
+              originWhitelist={["*"]}
+            />
+          )}
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -348,6 +447,11 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     lineHeight: 20,
   },
+  tributoUnavailable: {
+    fontSize: 12,
+    fontFamily: "Urbanist_600SemiBold",
+    color: "#D97706",
+  },
   tributoFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -368,5 +472,21 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: "#E5E7EB",
     marginLeft: 80,
+  },
+  pdfModalRoot: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  pdfModalClose: {
+    paddingHorizontal: 16,
+    paddingTop: 50,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+    width: 56,
+  },
+  pdfWebView: {
+    flex: 1,
+    backgroundColor: "#F3F4F6",
   },
 });

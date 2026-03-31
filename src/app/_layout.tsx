@@ -12,6 +12,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import '../../global.css';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { NotasFiscaisProvider } from '@/contexts/notas-fiscais-context';
 import { TomadoresProvider } from '@/contexts/tomadores-context';
@@ -62,6 +63,7 @@ export default function RootLayout() {
   }
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <UserProvider>
       <TomadoresProvider>
         <NotasFiscaisProvider>
@@ -90,5 +92,6 @@ export default function RootLayout() {
         </NotasFiscaisProvider>
       </TomadoresProvider>
     </UserProvider>
+    </GestureHandlerRootView>
   );
 }

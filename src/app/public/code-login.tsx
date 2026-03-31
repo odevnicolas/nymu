@@ -205,7 +205,7 @@ export default function CodeLogin() {
           transparent={true}
           visible={modalVisible}
           animationType="none"
-          onRequestClose={closeModal}
+          onRequestClose={() => {}}
         >
           <Animated.View 
             style={[

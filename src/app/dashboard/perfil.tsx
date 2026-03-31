@@ -320,7 +320,7 @@ export default function Perfil() {
         visible={showPasswordModal}
         transparent={true}
         animationType="slide"
-        onRequestClose={() => setShowPasswordModal(false)}
+        onRequestClose={() => {}}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>

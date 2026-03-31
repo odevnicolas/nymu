@@ -1,12 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import { File, Paths } from "expo-file-system";
+import * as Linking from "expo-linking";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Dimensions,
   FlatList,
   Modal,
+  Platform,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -35,6 +39,32 @@ function isLikelyRemotePdf(url: string): boolean {
   return /\.pdf($|\?)/i.test(url);
 }
 
+async function openPdfDataUrl(
+  dataUrl: string,
+  filename: string,
+  onIosFileReady: (fileUri: string) => void,
+): Promise<void> {
+  try {
+    const base64 = dataUrl.replace(/^data:[^;]+;base64,/i, "");
+    const safeFilename = filename.replace(/[^a-z0-9._-]/gi, "_");
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const file = new File(Paths.cache, safeFilename);
+    file.write(bytes);
+    if (Platform.OS === "ios") {
+      onIosFileReady(file.uri);
+    } else {
+      await Linking.openURL(file.uri);
+    }
+  } catch (err) {
+    console.log("[doc-viewer] erro ao abrir PDF:", err);
+    Alert.alert("Erro", "Não foi possível abrir o documento PDF.");
+  }
+}
+
 function formatUploadedAt(iso?: string): string {
   if (!iso) {
     return "—";
@@ -61,6 +91,7 @@ export default function DocumentosPorTipoScreen() {
 
   const { documentos, carregarDocumentosDoTipo, loadingTipo, isRefreshing } = useDocumentos();
   const [viewer, setViewer] = useState<Document | null>(null);
+  const [pdfFileUri, setPdfFileUri] = useState<string | null>(null);
 
   const tipoValido = useMemo(
     () => Boolean(tipoRaw && ALL_DOCUMENT_TYPES.includes(tipo as DocumentType)),
@@ -150,7 +181,15 @@ export default function DocumentosPorTipoScreen() {
             <TouchableOpacity
               style={styles.card}
               activeOpacity={0.75}
-              onPress={() => setViewer(item)}
+              onPress={() => {
+                const url = item.url ?? "";
+                const filename = item.filename ?? item.name ?? "documento.pdf";
+                if (isPdfDataUrl(url)) {
+                  openPdfDataUrl(url, filename, setPdfFileUri);
+                  return;
+                }
+                setViewer(item);
+              }}
               accessibilityLabel={`Abrir ${item.filename ?? item.name}`}
             >
               <View style={styles.cardThumbWrap}>
@@ -184,7 +223,7 @@ export default function DocumentosPorTipoScreen() {
         visible={viewer != null}
         animationType="slide"
         presentationStyle="fullScreen"
-        onRequestClose={() => setViewer(null)}
+        onRequestClose={() => {}}
       >
         <View style={styles.modalRoot}>
           <View style={styles.modalHeader}>
@@ -203,7 +242,8 @@ export default function DocumentosPorTipoScreen() {
           </View>
 
           {viewer?.url ? (
-            isPdfDataUrl(viewer.url) || (isRemoteHttpUrl(viewer.url) && isLikelyRemotePdf(viewer.url)) ? (
+            // PDFs data URL são tratados via pdfFileUri — só chegam aqui imagens e URLs remotas
+            isRemoteHttpUrl(viewer.url) && isLikelyRemotePdf(viewer.url) ? (
               <WebView
                 source={{ uri: viewer.url }}
                 style={[styles.webView, { height: winH - 100 }]}
@@ -233,6 +273,36 @@ export default function DocumentosPorTipoScreen() {
             <View style={styles.centered}>
               <Text style={styles.emptySubtitle}>Arquivo não disponível.</Text>
             </View>
+          )}
+        </View>
+      </Modal>
+
+      {/* Modal de PDF para iOS — carrega arquivo temporário em WebView */}
+      <Modal
+        visible={pdfFileUri != null}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setPdfFileUri(null)}
+      >
+        <View style={styles.modalRoot}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => setPdfFileUri(null)}
+              accessibilityRole="button"
+              accessibilityLabel="Fechar visualização"
+            >
+              <Ionicons name="close" size={26} color="#1F2937" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Documento</Text>
+            <View style={styles.placeholder} />
+          </View>
+          {pdfFileUri && (
+            <WebView
+              source={{ uri: pdfFileUri }}
+              style={[styles.webView, { height: winH - 100 }]}
+              originWhitelist={["*"]}
+            />
           )}
         </View>
       </Modal>

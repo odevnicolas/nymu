@@ -7,20 +7,21 @@ export function getMimeFromDataUrl(uri: string): string | null {
   return m ? m[1].trim().toLowerCase() : null;
 }
 
-export function isImageDataUrl(uri: string | undefined): boolean {
-  if (!uri || !uri.startsWith('data:')) {
-    return false;
-  }
-  const mime = getMimeFromDataUrl(uri);
-  return mime != null && mime.startsWith('image/');
-}
-
 export function isPdfDataUrl(uri: string | undefined): boolean {
   if (!uri || !uri.startsWith('data:')) {
     return false;
   }
   const mime = getMimeFromDataUrl(uri);
-  return mime === 'application/pdf' || mime === 'application/x-pdf';
+  return mime === 'application/pdf' || mime === 'application/x-pdf' || mime === 'image/pdf';
+}
+
+export function isImageDataUrl(uri: string | undefined): boolean {
+  if (!uri || !uri.startsWith('data:')) {
+    return false;
+  }
+  const mime = getMimeFromDataUrl(uri);
+  // image/pdf é PDF disfarçado — não tratar como imagem
+  return mime != null && mime.startsWith('image/') && mime !== 'image/pdf';
 }
 
 export function isRemoteHttpUrl(uri: string | undefined): boolean {

@@ -18,7 +18,6 @@ import Animated, {
   withTiming,
   runOnJS,
 } from 'react-native-reanimated';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 
 interface TomadorOpcoesModalProps {
   visible: boolean;
@@ -50,21 +49,6 @@ export function TomadorOpcoesModal({
     }
   }, [visible]);
 
-  // Gesture para fechar arrastando para baixo
-  const panGesture = Gesture.Pan()
-    .onUpdate((event) => {
-      if (event.translationY > 0) {
-        translateY.value = event.translationY;
-      }
-    })
-    .onEnd((event) => {
-      if (event.translationY > MODAL_HEIGHT * 0.3) {
-        runOnJS(handleClose)();
-      } else {
-        translateY.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.cubic) });
-      }
-    });
-
   const handleClose = () => {
     translateY.value = withTiming(MODAL_HEIGHT, { duration: 300 });
     backdropOpacity.value = withTiming(0, { duration: 200 }, (finished) => {
@@ -90,45 +74,40 @@ export function TomadorOpcoesModal({
       transparent
       animationType="none"
       statusBarTranslucent
-      onRequestClose={handleClose}
+      onRequestClose={() => {}}
     >
-      <GestureHandlerRootView style={styles.container}>
-        {/* Backdrop */}
-        <TouchableOpacity
-          style={StyleSheet.absoluteFill}
-          activeOpacity={1}
-          onPress={handleClose}
-        >
-          <Animated.View style={[styles.backdrop, animatedBackdropStyle]} />
-        </TouchableOpacity>
+      <View style={styles.container}>
+        {/* Backdrop — fecha ao tocar */}
+        <Animated.View style={[styles.backdrop, animatedBackdropStyle]} />
+        <TouchableOpacity style={styles.backdropTouchable} activeOpacity={1} onPress={handleClose} />
 
         {/* Modal Content */}
-        <GestureDetector gesture={panGesture}>
-          <Animated.View style={[styles.modalContent, animatedModalStyle]}>
-            {/* Handle */}
+        <Animated.View style={[styles.modalContent, animatedModalStyle]}>
+          {/* Handle decorativo */}
+          <View style={styles.handleArea}>
             <View style={styles.handle} />
+          </View>
 
-            {/* Opções */}
-            <View style={styles.optionsContainer}>
-              <TouchableOpacity
-                style={styles.optionButton}
-                onPress={onSolicitarNF}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.optionText}>Solicitar Nota Fiscal</Text>
-              </TouchableOpacity>
+          {/* Opções */}
+          <View style={styles.optionsContainer}>
+            <TouchableOpacity
+              style={styles.optionButton}
+              onPress={onSolicitarNF}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.optionText}>Solicitar Nota Fiscal</Text>
+            </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.optionButton}
-                onPress={onVisualizarDados}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.optionText}>Visualizar Dados</Text>
-              </TouchableOpacity>
-            </View>
-          </Animated.View>
-        </GestureDetector>
-      </GestureHandlerRootView>
+            <TouchableOpacity
+              style={styles.optionButton}
+              onPress={onVisualizarDados}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.optionText}>Visualizar Dados</Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      </View>
     </Modal>
   );
 }
@@ -140,6 +119,9 @@ const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: '#000000',
+  },
+  backdropTouchable: {
+    ...StyleSheet.absoluteFillObject,
   },
   modalContent: {
     position: 'absolute',
@@ -153,30 +135,32 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 32,
   },
+  handleArea: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
   handle: {
     width: 40,
     height: 4,
     backgroundColor: '#E5E7EB',
     borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: 24,
   },
   optionsContainer: {
     paddingHorizontal: 24,
     gap: 16,
   },
   optionButton: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#333333',
     height: 60,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#3B82F6',
+    shadowColor: '#000000',
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
   },

@@ -2,26 +2,25 @@
  * Tela de solicitação de nota fiscal
  */
 
-import React, { useState, useMemo } from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  ScrollView,
-  FlatList,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useTomadores } from '@/contexts/tomadores-context';
-import { useNotasFiscais } from '@/contexts/notas-fiscais-context';
 import { CadastroTomadorModal } from '@/components/cadastro-tomador-modal';
-import { TomadorOpcoesModal } from '@/components/tomador-opcoes-modal';
-import { VisualizarDadosModal } from '@/components/visualizar-dados-modal';
+import { ErroModal } from '@/components/erro-modal';
 import { SolicitarNFModal } from '@/components/solicitar-nf-modal';
 import { SucessoModal } from '@/components/sucesso-modal';
-import { ErroModal } from '@/components/erro-modal';
-import { TomadorFormData, Tomador, SolicitarNotaFiscalFormData } from '@/lib/api/types';
-import { formatCPF, formatCNPJ, formatPhone } from '@/utils/validators';
+import { TomadorOpcoesModal } from '@/components/tomador-opcoes-modal';
+import { VisualizarDadosModal } from '@/components/visualizar-dados-modal';
+import { useNotasFiscais } from '@/contexts/notas-fiscais-context';
+import { useTomadores } from '@/contexts/tomadores-context';
+import { SolicitarNotaFiscalFormData, Tomador, TomadorFormData } from '@/lib/api/types';
+import { formatCNPJ, formatCPF } from '@/utils/validators';
+import { Ionicons } from '@expo/vector-icons';
+import React, { useMemo, useState } from 'react';
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 
 export default function NotaFiscal() {
   const { tomadores, addTomador, getTomadoresByTipo } = useTomadores();

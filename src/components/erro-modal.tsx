@@ -77,7 +77,7 @@ export function ErroModal({
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}
+      onRequestClose={() => {}}
     >
       <View style={styles.overlay}>
         <Animated.View

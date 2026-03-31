@@ -17,6 +17,8 @@ import {
   Alert,
   Keyboard,
   TouchableWithoutFeedback,
+  AppState,
+  AppStateStatus,
 } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -25,7 +27,7 @@ import Animated, {
   runOnJS,
   Easing,
 } from 'react-native-reanimated';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   validateCPF,
   validateCNPJ,
@@ -45,7 +47,7 @@ interface CadastroTomadorModalProps {
 }
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const MODAL_HEIGHT = SCREEN_HEIGHT * 0.9;
+const MODAL_HEIGHT = SCREEN_HEIGHT * 0.72;
 
 export function CadastroTomadorModal({
   visible,
@@ -82,10 +84,27 @@ export function CadastroTomadorModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFetchingCep, setIsFetchingCep] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+  const isClosingRef = useRef(false);
+
+  // Log AppState enquanto modal está visível
+  useEffect(() => {
+    if (!visible) return;
+
+    const subscription = AppState.addEventListener('change', (nextState: AppStateStatus) => {
+      console.log('[CadastroTomadorModal] AppState changed →', nextState, '| isClosing:', isClosingRef.current, '| translateY:', translateY.value);
+    });
+
+    console.log('[CadastroTomadorModal] Modal aberto — AppState atual:', AppState.currentState);
+
+    return () => {
+      subscription.remove();
+    };
+  }, [visible]);
 
   // Animações (subida suave na abertura, sem bounce)
   useEffect(() => {
     if (visible) {
+      isClosingRef.current = false;
       translateY.value = withTiming(0, {
         duration: 300,
         easing: Easing.out(Easing.cubic),
@@ -130,22 +149,10 @@ export function CadastroTomadorModal({
     setUfError('');
   };
 
-  // Gesture para fechar arrastando para baixo
-  const panGesture = Gesture.Pan()
-    .onUpdate((event) => {
-      if (event.translationY > 0) {
-        translateY.value = event.translationY;
-      }
-    })
-    .onEnd((event) => {
-      if (event.translationY > MODAL_HEIGHT * 0.3) {
-        runOnJS(handleClose)();
-      } else {
-        translateY.value = withTiming(0, { duration: 200 });
-      }
-    });
-
   const handleClose = () => {
+    console.log('[CadastroTomadorModal] handleClose — já fechando:', isClosingRef.current, '| AppState:', AppState.currentState);
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
     translateY.value = withTiming(MODAL_HEIGHT, { duration: 300 });
     backdropOpacity.value = withTiming(0, { duration: 200 }, (finished) => {
       if (finished) {
@@ -314,22 +321,15 @@ export function CadastroTomadorModal({
     opacity: backdropOpacity.value * 0.5,
   }));
 
-  if (!visible) return null;
-
   return (
     <Modal
       visible={visible}
       transparent
       animationType="none"
       statusBarTranslucent
-      onRequestClose={handleClose}
+      onRequestClose={() => {}}
     >
-      <GestureHandlerRootView style={styles.container}>
-        <KeyboardAvoidingView
-          style={styles.container}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 20}
-        >
+      <GestureHandlerRootView style={{ flex: 1 }}>
           {/* Backdrop */}
           <TouchableWithoutFeedback onPress={() => {
             Keyboard.dismiss();
@@ -339,15 +339,18 @@ export function CadastroTomadorModal({
           </TouchableWithoutFeedback>
 
           {/* Modal Content */}
-          <GestureDetector gesture={panGesture}>
-            <Animated.View style={[styles.modalContent, animatedModalStyle]}>
-              {/* Handle */}
+          <KeyboardAvoidingView
+            style={styles.keyboardAvoidingContainer}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          >
+          <Animated.View style={[styles.modalContent, animatedModalStyle]}>
+            {/* Handle + Header */}
+            <View>
               <View style={styles.handle} />
-
-              {/* Header */}
               <View style={styles.header}>
                 <Text style={styles.headerTitle}>Cadastrar Tomador</Text>
               </View>
+            </View>
 
               {/* Toggle PF/PJ */}
               <View style={styles.toggleContainer}>
@@ -590,9 +593,8 @@ export function CadastroTomadorModal({
                   </Text>
                 </TouchableOpacity>
               </View>
-            </Animated.View>
-          </GestureDetector>
-        </KeyboardAvoidingView>
+          </Animated.View>
+          </KeyboardAvoidingView>
       </GestureHandlerRootView>
     </Modal>
   );
@@ -606,11 +608,11 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: '#000000',
   },
+  keyboardAvoidingContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
   modalContent: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     height: MODAL_HEIGHT,
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,

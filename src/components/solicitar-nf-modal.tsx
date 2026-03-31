@@ -235,7 +235,7 @@ export function SolicitarNFModal({ visible, onClose, onSubmit, tomador }: Solici
       transparent
       animationType="none"
       statusBarTranslucent
-      onRequestClose={handleClose}
+      onRequestClose={() => {}}
     >
       <GestureHandlerRootView style={styles.container}>
           {/* Backdrop */}

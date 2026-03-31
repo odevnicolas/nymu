@@ -147,6 +147,34 @@ export async function register(
 }
 
 /**
+ * Busca os dados do usuário autenticado
+ *
+ * @returns Promise com os dados do usuário
+ * @throws Error se não houver token válido ou houver erro de conexão
+ */
+export async function getProfile(): Promise<User> {
+  const response = await apiRequest<{ user: User }>(apiEndpoints.updateProfile, {
+    method: 'GET',
+  }, true); // requireAuth = true
+
+  const user = response.user;
+  if (user.nome && !user.name) {
+    user.name = user.nome;
+  }
+  if (user.foto && !user.avatar) {
+    const foto = user.foto;
+    if (foto.startsWith('http://') || foto.startsWith('https://') || foto.startsWith('data:image')) {
+      user.avatar = foto;
+    } else {
+      user.avatar = `${API_URL}/${foto.startsWith('/') ? foto.substring(1) : foto}`;
+    }
+    user.foto = user.avatar;
+  }
+
+  return user;
+}
+
+/**
  * Atualiza o perfil do usuário
  * 
  * @param profileData - Dados do perfil para atualizar

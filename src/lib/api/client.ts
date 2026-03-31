@@ -7,6 +7,7 @@
 
 import { router } from 'expo-router';
 import { getToken, removeToken } from '../storage/token';
+import { clearUserCache } from '../storage/user-cache';
 
 /**
  * Erro HTTP com metadados da resposta (útil para logs e diagnóstico).
@@ -129,6 +130,7 @@ export async function apiRequest<T>(
     if (!response.ok) {
       if (response.status === 401) {
         await removeToken();
+        await clearUserCache();
         router.replace('/public/login');
         throw new Error('Sessão expirada. Faça login novamente.');
       }

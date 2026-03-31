@@ -206,7 +206,7 @@ export function FiltroDataModal({
   if (!visible) return null;
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={handleClose}>
+    <Modal visible={visible} transparent animationType="none" onRequestClose={() => {}}>
       <TouchableWithoutFeedback onPress={handleClose}>
         <View style={styles.overlay}>
           <Animated.View style={[styles.backdrop, animatedBackdropStyle]} />

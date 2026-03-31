@@ -111,7 +111,7 @@ export default function Login() {
         transparent
         visible={isCodeModalVisible}
         animationType="none"
-        onRequestClose={closeCodeModal}
+        onRequestClose={() => {}}
       >
         <Animated.View style={[styles.modalOverlay, { opacity: overlayOpacity }]}>
           <TouchableOpacity
