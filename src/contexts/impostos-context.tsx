@@ -10,8 +10,7 @@ import {
   ImpostoSummary, 
   listImpostos, 
   getImpostosSummary,
-  ImpostoStatus,
-  ImpostoType 
+  ImpostoStatus
 } from '@/lib/api/impostos';
 
 interface ImpostosContextData {

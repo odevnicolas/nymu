@@ -4,7 +4,7 @@
 
 import { apiRequest } from './client';
 import { apiEndpoints } from './config';
-import { NotaFiscal, SolicitarNotaFiscalFormData } from './types';
+import { NotaFiscal } from './types';
 
 /**
  * Cria/solicita uma nova nota fiscal
@@ -28,9 +28,6 @@ export async function createNotaFiscal(data: {
     issRetention: false,
     observations: '',
   };
-
-  // Mesmo JSON enviado no body do POST /invoices
-  console.log('[POST /invoices]', JSON.stringify(requestBody));
 
   const response = await apiRequest<{
     status: string;

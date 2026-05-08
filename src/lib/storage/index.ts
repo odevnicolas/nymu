@@ -50,8 +50,6 @@ export async function getOnboardingCompleted(): Promise<boolean> {
     }
 
     const value = await SecureStore.getItemAsync(ONBOARDING_KEY);
-
-    console.log('value', value);
     return value === 'true';
   } catch (error) {
     console.warn('Erro ao verificar onboarding:', error);

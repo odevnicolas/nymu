@@ -9,7 +9,6 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Dimensions,
 } from 'react-native';
 import Animated, {
   Easing,
@@ -26,7 +25,6 @@ interface TomadorOpcoesModalProps {
   onVisualizarDados: () => void;
 }
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const MODAL_HEIGHT = 280;
 
 export function TomadorOpcoesModal({
@@ -47,6 +45,8 @@ export function TomadorOpcoesModal({
       translateY.value = withTiming(MODAL_HEIGHT, { duration: 300 });
       backdropOpacity.value = withTiming(0, { duration: 200 });
     }
+  // Reanimated shared values are stable refs and should not restart this effect.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   const handleClose = () => {

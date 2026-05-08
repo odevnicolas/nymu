@@ -43,8 +43,8 @@ export default function NotaFiscal() {
   const [abaAtiva, setAbaAtiva] = useState<'PF' | 'PJ'>('PJ');
 
   // Contadores
-  const tomadoresPJ = useMemo(() => getTomadoresByTipo('PJ'), [tomadores, getTomadoresByTipo]);
-  const tomadoresPF = useMemo(() => getTomadoresByTipo('PF'), [tomadores, getTomadoresByTipo]);
+  const tomadoresPJ = useMemo(() => getTomadoresByTipo('PJ'), [getTomadoresByTipo]);
+  const tomadoresPF = useMemo(() => getTomadoresByTipo('PF'), [getTomadoresByTipo]);
   
   // Tomadores filtrados pela aba ativa
   const tomadoresFiltrados = useMemo(() => 

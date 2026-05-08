@@ -17,8 +17,6 @@ import {
   Alert,
   Keyboard,
   TouchableWithoutFeedback,
-  AppState,
-  AppStateStatus,
 } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -86,21 +84,6 @@ export function CadastroTomadorModal({
   const scrollViewRef = useRef<ScrollView>(null);
   const isClosingRef = useRef(false);
 
-  // Log AppState enquanto modal está visível
-  useEffect(() => {
-    if (!visible) return;
-
-    const subscription = AppState.addEventListener('change', (nextState: AppStateStatus) => {
-      console.log('[CadastroTomadorModal] AppState changed →', nextState, '| isClosing:', isClosingRef.current, '| translateY:', translateY.value);
-    });
-
-    console.log('[CadastroTomadorModal] Modal aberto — AppState atual:', AppState.currentState);
-
-    return () => {
-      subscription.remove();
-    };
-  }, [visible]);
-
   // Animações (subida suave na abertura, sem bounce)
   useEffect(() => {
     if (visible) {
@@ -114,6 +97,8 @@ export function CadastroTomadorModal({
       translateY.value = withTiming(MODAL_HEIGHT, { duration: 300 });
       backdropOpacity.value = withTiming(0, { duration: 200 });
     }
+  // Reanimated shared values are stable refs and should not restart this effect.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   // Reset form ao abrir
@@ -121,6 +106,8 @@ export function CadastroTomadorModal({
     if (visible) {
       resetForm();
     }
+  // Reset intentionally follows modal visibility only.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   const resetForm = () => {
@@ -150,7 +137,6 @@ export function CadastroTomadorModal({
   };
 
   const handleClose = () => {
-    console.log('[CadastroTomadorModal] handleClose — já fechando:', isClosingRef.current, '| AppState:', AppState.currentState);
     if (isClosingRef.current) return;
     isClosingRef.current = true;
     translateY.value = withTiming(MODAL_HEIGHT, { duration: 300 });

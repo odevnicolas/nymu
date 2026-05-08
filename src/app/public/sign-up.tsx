@@ -1,19 +1,67 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { register } from "@/lib/api/auth";
+import { cleanDocument, formatCPF, validateCPF } from "@/utils/validators";
 
 export default function SignUp() {
-  const [email, setEmail] = useState('');
+  const params = useLocalSearchParams<{ email?: string; code?: string }>();
+  const [email, setEmail] = useState(params.email ?? '');
+  const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Função simples para verificar se a senha é forte
   const isPasswordStrong = () => {
     return password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password);
+  };
+
+  const handleSubmit = async () => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const cleanedCpf = cleanDocument(cpf);
+
+    if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      Alert.alert('Erro', 'Digite um e-mail válido.');
+      return;
+    }
+
+    if (!validateCPF(cleanedCpf)) {
+      Alert.alert('Erro', 'Digite um CPF válido.');
+      return;
+    }
+
+    if (!isPasswordStrong()) {
+      Alert.alert('Erro', 'A senha deve ter pelo menos 8 caracteres, uma letra maiúscula e um número.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Erro', 'As senhas não conferem.');
+      return;
+    }
+
+    if (!agreedToTerms) {
+      Alert.alert('Erro', 'Para continuar, aceite os termos e a política de privacidade.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await register(normalizedEmail, password, cleanedCpf, params.code);
+      Alert.alert('Cadastro concluído', 'Agora você já pode fazer login.', [
+        { text: 'Entrar', onPress: () => router.replace('/public/sign-in' as any) },
+      ]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Não foi possível concluir o cadastro.';
+      Alert.alert('Erro no cadastro', message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -22,7 +70,7 @@ export default function SignUp() {
         {/* Header */}
         <View style={styles.headerContainer}>
           <Text style={styles.title}>Só mais alguns dados</Text>
-          <Text style={styles.subtitle}>Insira mais alguns dados par ao seu cadastro.</Text>
+          <Text style={styles.subtitle}>Insira mais alguns dados para o seu cadastro.</Text>
         </View>
 
         {/* Form */}
@@ -39,6 +87,22 @@ export default function SignUp() {
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                placeholderTextColor="#9CA3AF"
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputWrapper}>
+            <Text style={styles.inputLabel}>Digite seu CPF</Text>
+            <View style={styles.inputContainer}>
+              <Ionicons name="person-outline" size={20} color="#6B7280" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="000.000.000-00"
+                value={cpf}
+                onChangeText={(text) => setCpf(formatCPF(text))}
+                keyboardType="number-pad"
+                maxLength={14}
                 placeholderTextColor="#9CA3AF"
               />
             </View>
@@ -137,11 +201,12 @@ export default function SignUp() {
 
           {/* Submit Button */}
           <TouchableOpacity 
-            style={styles.submitButton}
+            style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
             activeOpacity={0.8}
-            onPress={() => router.push('/dashboard/' as any)}
+            onPress={handleSubmit}
+            disabled={isSubmitting}
           >
-            <Text style={styles.submitButtonText}>Acessar</Text>
+            <Text style={styles.submitButtonText}>{isSubmitting ? 'Cadastrando...' : 'Acessar'}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -266,6 +331,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 8,
+  },
+  submitButtonDisabled: {
+    opacity: 0.5,
   },
   submitButtonText: {
     fontSize: 16,

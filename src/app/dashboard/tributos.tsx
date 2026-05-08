@@ -6,6 +6,7 @@ import { useCallback, useState } from "react";
 import {
   Alert,
   FlatList,
+  Modal,
   Platform,
   StyleSheet,
   Text,
@@ -14,7 +15,6 @@ import {
   RefreshControl,
 } from "react-native";
 import { WebView } from "react-native-webview";
-import { Modal } from "react-native";
 import { useImpostos } from "@/contexts/impostos-context";
 import {
   type Imposto,
@@ -33,8 +33,6 @@ export default function Tributos() {
   const [pdfFileUri, setPdfFileUri] = useState<string | null>(null);
 
   const openTaxDocument = useCallback(async (tributo: Imposto) => {
-    console.log("[tributos] item pressionado:", tributo);
-
     if (!tributo.url) {
       Alert.alert("Aviso", "Boleto indisponível no momento.");
       return;
@@ -57,7 +55,7 @@ export default function Tributos() {
         } else {
           await Linking.openURL(file.uri);
         }
-      } catch (err) {
+      } catch {
         Alert.alert("Erro", "Não foi possível abrir o documento PDF.");
       }
       return;

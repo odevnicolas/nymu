@@ -32,6 +32,10 @@ export function setupAuthInterceptor(): void {
     
     // Retorna header de autenticação se token existir
     // Caso contrário, retorna objeto vazio (não adiciona header)
-    return token ? { Authorization: `Bearer ${token}` } : {};
+    const headers: Record<string, string> = token
+      ? { Authorization: `Bearer ${token}` }
+      : {};
+
+    return headers;
   });
 }

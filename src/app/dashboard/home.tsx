@@ -6,7 +6,6 @@ import { getShortName } from "@/utils/user";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useDimensions } from "@/hooks/use-dimensions";
 
 const STATUS_COLORS: Record<string, string> = {
   PROCESSANDO: '#3B82F6',
@@ -16,18 +15,9 @@ const STATUS_COLORS: Record<string, string> = {
   SIMULATED: '#F59E0B',
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  PROCESSANDO: 'Processando',
-  EMITIDA: 'Emitida',
-  CANCELADA: 'Cancelada',
-  ERRO: 'Erro',
-  SIMULATED: 'Simulada',
-};
-
 export default function Home() {
   const { user } = useUser();
   const { notasFiscais } = useNotasFiscais();
-  const { spacing, fontSize } = useDimensions();
   
   const getGreeting = () => {
     const hour = new Date().getHours();

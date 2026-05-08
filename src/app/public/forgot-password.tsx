@@ -5,6 +5,7 @@ import {
   Alert,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   ScrollView,
   StyleSheet,
@@ -13,6 +14,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
+const WHATSAPP_URL = 'https://api.whatsapp.com/send?phone=5585985150813&text=Ol%C3%A1,%20Estou%20vindo%20do%20app%20da%20Nymu%20e%20preciso%20recuperar%20meu%20c%C3%B3digo%20de%20acesso.';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -26,8 +29,14 @@ export default function ForgotPassword() {
 
     setIsLoading(true);
     try {
-      // TODO: integrar com API de recuperação de senha
-      Alert.alert("E-mail enviado", "Verifique sua caixa de entrada.");
+      const canOpen = await Linking.canOpenURL(WHATSAPP_URL);
+      if (!canOpen) {
+        Alert.alert("Não foi possível abrir o WhatsApp", "Tente novamente em instantes.");
+        return;
+      }
+      await Linking.openURL(WHATSAPP_URL);
+    } catch {
+      Alert.alert("Erro", "Não foi possível abrir o canal de recuperação.");
     } finally {
       setIsLoading(false);
     }
@@ -55,7 +64,7 @@ export default function ForgotPassword() {
           <View style={styles.textContainer}>
             <Text style={styles.titleText}>Recupere seu código</Text>
             <Text style={styles.subtitleText}>
-              Digite seu e-mail para recuperar seu código.
+              Digite seu e-mail e fale com a equipe para recuperar seu código.
             </Text>
           </View>
 
@@ -86,7 +95,7 @@ export default function ForgotPassword() {
               disabled={isLoading}
             >
               <Text style={styles.primaryButtonText}>
-                {isLoading ? "Enviando..." : "Recuperar Código"}
+                {isLoading ? "Abrindo..." : "Recuperar Código"}
               </Text>
             </TouchableOpacity>
           </View>

@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Dimensions, ScaledSize, ScaledSizeWithScale, LayoutChangeEvent } from 'react-native';
+import { Dimensions } from 'react-native';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 

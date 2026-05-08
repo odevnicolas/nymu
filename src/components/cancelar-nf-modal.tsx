@@ -54,7 +54,7 @@ export function CancelarNFModal({
     try {
       await onConfirm(reason.trim());
       handleClose();
-    } catch (error) {
+    } catch {
       Alert.alert('Erro', 'Não foi possível cancelar a nota fiscal. Tente novamente.');
     } finally {
       setIsSubmitting(false);

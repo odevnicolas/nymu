@@ -31,13 +31,16 @@ export default function Onboarding() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const insets = useSafeAreaInsets();
 
+  const finishOnboarding = async () => {
+    await saveOnboardingCompleted();
+    router.replace('/public/login');
+  };
+
   const handleNext = async () => {
     if (currentIndex < ONBOARDING_DATA.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      // Salvar flag que o onboarding foi completado
-      await saveOnboardingCompleted();
-      router.push('/public/login');
+      await finishOnboarding();
     }
   };
 
@@ -47,6 +50,13 @@ export default function Onboarding() {
   return (
     <View style={styles.container}>
       <StatusBar style="dark" translucent backgroundColor="transparent" />
+      <TouchableOpacity
+        style={[styles.skipButton, { top: insets.top + 16 }]}
+        onPress={finishOnboarding}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.skipButtonText}>Pular</Text>
+      </TouchableOpacity>
       <View style={styles.slideContainer}>
         <View style={[styles.imageContainer, { marginTop: -insets.top }]}>
           <Image 
@@ -57,6 +67,14 @@ export default function Onboarding() {
         </View>
 
         <View style={styles.contentContainer}>
+          <View style={styles.progressContainer}>
+            {ONBOARDING_DATA.map((item, index) => (
+              <View
+                key={item.id}
+                style={[styles.progressDot, index === currentIndex && styles.progressDotActive]}
+              />
+            ))}
+          </View>
           <View style={[styles.yellowLineContainer, { alignItems: lineAlignment }]}>
             <View style={styles.yellowLine} />
           </View>
@@ -90,6 +108,18 @@ const styles = StyleSheet.create({
   slideContainer: {
     flex: 1,
   },
+  skipButton: {
+    position: 'absolute',
+    right: 24,
+    zIndex: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  skipButtonText: {
+    fontSize: 15,
+    fontFamily: 'Urbanist_600SemiBold',
+    color: '#2D3648',
+  },
   imageContainer: {
     width: '100%',
     flex: 1,
@@ -103,6 +133,21 @@ const styles = StyleSheet.create({
   contentContainer: {
     paddingHorizontal: 48,
     paddingBottom: 128,
+  },
+  progressContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 20,
+  },
+  progressDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#E5E7EB',
+  },
+  progressDotActive: {
+    width: 24,
+    backgroundColor: '#FDB813',
   },
   yellowLineContainer: {
     width: '100%',

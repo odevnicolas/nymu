@@ -59,8 +59,7 @@ async function openPdfDataUrl(
     } else {
       await Linking.openURL(file.uri);
     }
-  } catch (err) {
-    console.log("[doc-viewer] erro ao abrir PDF:", err);
+  } catch {
     Alert.alert("Erro", "Não foi possível abrir o documento PDF.");
   }
 }

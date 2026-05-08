@@ -194,7 +194,7 @@ export default function Perfil() {
       
       // Mostrar modal de sucesso
       setShowSuccessModal(true);
-    } catch (error) {
+    } catch {
       console.error('Erro ao alterar senha');
     } finally {
       setIsChangingPassword(false);

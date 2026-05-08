@@ -2,7 +2,7 @@
  * Tela de listagem de notas fiscais emitidas
  */
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -11,7 +11,9 @@ import {
   FlatList,
   RefreshControl,
   Alert,
+  Linking,
 } from 'react-native';
+import { File, Paths } from 'expo-file-system';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useNotasFiscais } from '@/contexts/notas-fiscais-context';
@@ -20,7 +22,7 @@ import { CancelarNFModal } from '@/components/cancelar-nf-modal';
 import { FiltroDataModal } from '@/components/filtro-data-modal';
 import { NotaFiscal } from '@/lib/api/types';
 import { formatCurrency } from '@/utils/formatters';
-import { cancelNotaFiscal } from '@/lib/api/notas-fiscais';
+import { cancelNotaFiscal, downloadPdf, downloadXml } from '@/lib/api/notas-fiscais';
 
 const STATUS_COLORS: Record<string, string> = {
   PROCESSANDO: '#3B82F6',
@@ -47,8 +49,26 @@ export default function MinhasNotas() {
   const [dataInicio, setDataInicio] = useState<Date | null>(null);
   const [dataFim, setDataFim] = useState<Date | null>(null);
 
+  const notasFiltradas = useMemo(() => {
+    if (!dataInicio && !dataFim) {
+      return notasFiscais;
+    }
+
+    const start = dataInicio ? new Date(dataInicio) : null;
+    const end = dataFim ? new Date(dataFim) : null;
+    if (start) start.setHours(0, 0, 0, 0);
+    if (end) end.setHours(23, 59, 59, 999);
+
+    return notasFiscais.filter((nota) => {
+      const createdAt = nota.createdAt instanceof Date ? nota.createdAt : new Date(nota.createdAt);
+      if (start && createdAt < start) return false;
+      if (end && createdAt > end) return false;
+      return true;
+    });
+  }, [dataFim, dataInicio, notasFiscais]);
+
   // Calcular total faturado
-  const totalFaturado = notasFiscais.reduce((acc, nota) => {
+  const totalFaturado = notasFiltradas.reduce((acc, nota) => {
     if (nota.status === 'EMITIDA' || nota.status === 'SIMULATED') {
       return acc + nota.serviceValue;
     }
@@ -58,7 +78,7 @@ export default function MinhasNotas() {
   const handleRefresh = async () => {
     try {
       await refreshNotasFiscais();
-    } catch (error) {
+    } catch {
       Alert.alert('Erro', 'Não foi possível atualizar as notas fiscais.');
     }
   };
@@ -85,14 +105,29 @@ export default function MinhasNotas() {
     }
   };
 
-  const handleDownloadXML = (nota: NotaFiscal) => {
-    Alert.alert('Download XML', `Baixando XML da nota ${nota.invoiceNumber}...`);
-    // TODO: Implementar download real
+  const openDownloadedBlob = async (blob: Blob, filename: string) => {
+    const arrayBuffer = await blob.arrayBuffer();
+    const file = new File(Paths.cache, filename);
+    file.write(new Uint8Array(arrayBuffer));
+    await Linking.openURL(file.uri);
   };
 
-  const handleDownloadPDF = (nota: NotaFiscal) => {
-    Alert.alert('Download PDF', `Baixando PDF da nota ${nota.invoiceNumber}...`);
-    // TODO: Implementar download real
+  const handleDownloadXML = async (nota: NotaFiscal) => {
+    try {
+      const blob = await downloadXml(nota.id);
+      await openDownloadedBlob(blob, `nota-${nota.invoiceNumber || nota.id}.xml`);
+    } catch {
+      Alert.alert('Erro', 'Não foi possível baixar o XML desta nota.');
+    }
+  };
+
+  const handleDownloadPDF = async (nota: NotaFiscal) => {
+    try {
+      const blob = await downloadPdf(nota.id);
+      await openDownloadedBlob(blob, `nota-${nota.invoiceNumber || nota.id}.pdf`);
+    } catch {
+      Alert.alert('Erro', 'Não foi possível baixar o PDF desta nota.');
+    }
   };
 
   return (
@@ -119,7 +154,7 @@ export default function MinhasNotas() {
 
           <View style={styles.statItem}>
             <Text style={styles.statLabel}>Qtd. de NFs</Text>
-            <Text style={styles.statValue}>{notasFiscais.length}</Text>
+            <Text style={styles.statValue}>{notasFiltradas.length}</Text>
           </View>
         </View>
       </View>
@@ -144,7 +179,7 @@ export default function MinhasNotas() {
 
       {/* Lista */}
       <FlatList
-        data={notasFiscais}
+        data={notasFiltradas}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -156,7 +191,9 @@ export default function MinhasNotas() {
             <Ionicons name="document-text-outline" size={64} color="#9CA3AF" />
             <Text style={styles.emptyTitle}>Nenhuma nota fiscal emitida</Text>
             <Text style={styles.emptySubtitle}>
-              As notas fiscais que você solicitar aparecerão aqui.
+              {dataInicio || dataFim
+                ? 'Nenhuma nota encontrada no período selecionado.'
+                : 'As notas fiscais que você solicitar aparecerão aqui.'}
             </Text>
           </View>
         }
@@ -178,6 +215,17 @@ export default function MinhasNotas() {
               </Text>
               <Text style={styles.notaValue}>
                 {formatCurrency(nota.serviceValue)}
+              </Text>
+            </View>
+            <View style={styles.statusBadge}>
+              <View
+                style={[
+                  styles.statusDot,
+                  { backgroundColor: STATUS_COLORS[nota.status] || '#6B7280' },
+                ]}
+              />
+              <Text style={styles.statusText}>
+                {STATUS_LABELS[nota.status] || nota.status}
               </Text>
             </View>
           </TouchableOpacity>
@@ -216,7 +264,6 @@ export default function MinhasNotas() {
           setDataInicio(inicio);
           setDataFim(fim);
           setFiltroVisible(false);
-          // TODO: Aplicar filtro na lista
         }}
       />
     </View>
@@ -373,5 +420,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Urbanist_700Bold',
     color: '#1F2937',
+  },
+  statusBadge: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: '#F3F4F6',
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  statusText: {
+    fontSize: 12,
+    fontFamily: 'Urbanist_600SemiBold',
+    color: '#374151',
   },
 });

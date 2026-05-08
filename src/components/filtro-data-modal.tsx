@@ -53,6 +53,8 @@ export function FiltroDataModal({
       translateY.value = withTiming(600, { duration: 300 });
       backdropOpacity.value = withTiming(0, { duration: 200 });
     }
+  // Reanimated shared values are stable refs and should not restart this effect.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   const handleClose = () => {

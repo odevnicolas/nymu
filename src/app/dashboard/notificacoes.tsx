@@ -73,7 +73,7 @@ export default function Notificacoes() {
 
   useEffect(() => {
     loadPage(1, false, unreadOnly);
-  }, [unreadOnly]);
+  }, [loadPage, unreadOnly]);
 
   const loadMore = useCallback(() => {
     if (loadingMore || loading || page >= totalPages) return;

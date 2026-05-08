@@ -7,7 +7,7 @@
  * Implementação compatível com React Native (sem Node events)
  */
 
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback } from 'react';
 
 // Tipo para callbacks de eventos
 type EventCallback = () => void;
@@ -69,35 +69,27 @@ export function useAuthEventListener(props: {
   onLogout?: () => void;
 }) {
   const { onLogin, onLogout } = props;
-  const onLoginRef = useRef(onLogin);
-  const onLogoutRef = useRef(onLogout);
-
-  // Manter a referência atualizada
-  useEffect(() => {
-    onLoginRef.current = onLogin;
-    onLogoutRef.current = onLogout;
-  }, [onLogin, onLogout]);
 
   useEffect(() => {
     if (onLogin) {
-      listeners.login.push(onLoginRef.current);
+      listeners.login.push(onLogin);
     }
 
     if (onLogout) {
-      listeners.logout.push(onLogoutRef.current);
+      listeners.logout.push(onLogout);
     }
 
     return () => {
       // Remover listeners quando o componente desmontar
       if (onLogin) {
-        const index = listeners.login.indexOf(onLoginRef.current);
+        const index = listeners.login.indexOf(onLogin);
         if (index > -1) {
           listeners.login.splice(index, 1);
         }
       }
 
       if (onLogout) {
-        const index = listeners.logout.indexOf(onLogoutRef.current);
+        const index = listeners.logout.indexOf(onLogout);
         if (index > -1) {
           listeners.logout.splice(index, 1);
         }

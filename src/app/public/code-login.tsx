@@ -1,13 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Animated, Dimensions, Easing, Image, Keyboard, KeyboardAvoidingView, Modal, PanResponder, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Animated, Dimensions, Easing, Image, Keyboard, KeyboardAvoidingView, Linking, Modal, PanResponder, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { validateCode } from "@/lib/api/auth";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const INSTAGRAM_URL = 'https://www.instagram.com/nymusolucoes?igsh=MXc4anRmbDY1YTZodQ==';
+const WHATSAPP_URL = 'https://api.whatsapp.com/send?phone=5585985150813&text=Ol%C3%A1,%20Estou%20vindo%20do%20app%20da%20Nymu%20e%20gostaria%20de%20solicitar%20meu%20c%C3%B3digo%20de%20acesso.';
 
 export default function CodeLogin() {
+  const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
-  const [codeError, setCodeError] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [codeError, setCodeError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
@@ -61,18 +67,59 @@ export default function CodeLogin() {
         }),
       ]).start();
     }
+  // Shared animation values are stable refs from Animated.Value.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modalVisible]);
 
   const closeModal = () => {
     setModalVisible(false);
   };
 
-  const handleVerificarCodigo = () => {
-    if (!code.trim()) {
-      setCodeError(true);
+  const openExternalLink = async (url: string) => {
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (!canOpen) {
+        Alert.alert('Não foi possível abrir o link', 'Tente novamente em instantes.');
+        return;
+      }
+      await Linking.openURL(url);
+    } catch {
+      Alert.alert('Erro ao abrir o link', 'Tente novamente em instantes.');
+    }
+  };
+
+  const handleVerificarCodigo = async () => {
+    const normalizedEmail = email.trim().toLowerCase();
+    setEmailError('');
+    setCodeError('');
+
+    if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setEmailError('Digite um e-mail válido.');
       return;
     }
-    router.push('/public/sign-up');
+
+    if (code.length !== 6) {
+      setCodeError('Digite o código de 6 dígitos.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await validateCode(normalizedEmail, code);
+      if (response.success === false) {
+        setCodeError(response.message || 'Código inválido ou expirado.');
+        return;
+      }
+      router.push({
+        pathname: '/public/sign-up',
+        params: { email: normalizedEmail, code },
+      } as any);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Não foi possível validar o código.';
+      setCodeError(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const panResponder = useRef(
@@ -144,20 +191,37 @@ export default function CodeLogin() {
           </View>
 
           <View style={styles.buttonsContainer}>
+            <View style={[styles.codeInputContainer, emailError && styles.codeInputContainerError]}>
+              <Ionicons name="mail-outline" size={24} color={emailError ? '#EF4444' : '#6B7280'} style={styles.inputIcon} />
+              <TextInput
+                style={styles.codeInput}
+                placeholder="Digite seu e-mail"
+                value={email}
+                onChangeText={(text) => { setEmail(text); setEmailError(''); }}
+                placeholderTextColor="#9CA3AF"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+            {emailError && (
+              <Text style={styles.errorText}>{emailError}</Text>
+            )}
+
             <View style={[styles.codeInputContainer, codeError && styles.codeInputContainerError]}>
-              <Ionicons name="person-outline" size={24} color={codeError ? '#EF4444' : '#6B7280'} style={styles.inputIcon} />
+              <Ionicons name="keypad-outline" size={24} color={codeError ? '#EF4444' : '#6B7280'} style={styles.inputIcon} />
               <TextInput
                 style={styles.codeInput}
                 placeholder="Digite o código recebido"
                 value={code}
-                onChangeText={(text) => { setCode(text.replace(/[^0-9]/g, '').slice(0, 6)); setCodeError(false); }}
+                onChangeText={(text) => { setCode(text.replace(/[^0-9]/g, '').slice(0, 6)); setCodeError(''); }}
                 placeholderTextColor="#9CA3AF"
                 keyboardType="number-pad"
                 maxLength={6}
               />
             </View>
             {codeError && (
-              <Text style={styles.errorText}>Por favor, digite o código recebido.</Text>
+              <Text style={styles.errorText}>{codeError}</Text>
             )}
 
             <View style={styles.codeActionsContainer}>
@@ -173,8 +237,9 @@ export default function CodeLogin() {
                   style={styles.primaryButton}
                   activeOpacity={0.8}
                   onPress={handleVerificarCodigo}
+                  disabled={isLoading}
                 >
-                  <Text style={styles.primaryButtonText}>Verificar Código</Text>
+                  <Text style={styles.primaryButtonText}>{isLoading ? 'Verificando...' : 'Verificar Código'}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity 
@@ -250,7 +315,7 @@ export default function CodeLogin() {
                 </Text>
 
                 <View style={styles.socialIconsContainer}>
-                  <TouchableOpacity style={styles.socialItem} activeOpacity={0.8}>
+                  <TouchableOpacity style={styles.socialItem} activeOpacity={0.8} onPress={() => openExternalLink(INSTAGRAM_URL)}>
                     <Image 
                       source={require('@/assets/images/instagramIcon.png')}
                       style={styles.socialIcon}
@@ -259,7 +324,7 @@ export default function CodeLogin() {
                     <Text style={styles.socialText}>Instagram</Text>
                   </TouchableOpacity>
 
-                  <TouchableOpacity style={styles.socialItem} activeOpacity={0.8}>
+                  <TouchableOpacity style={styles.socialItem} activeOpacity={0.8} onPress={() => openExternalLink(WHATSAPP_URL)}>
                     <Image 
                       source={require('@/assets/images/whatsappIcon.png')}
                       style={styles.socialIcon}
@@ -272,7 +337,7 @@ export default function CodeLogin() {
                 <TouchableOpacity 
                   style={styles.modalButton}
                   activeOpacity={0.8}
-                  onPress={closeModal}
+                  onPress={() => openExternalLink(WHATSAPP_URL)}
                 >
                   <Text style={styles.modalButtonText}>Entrar em contato e solicitar código!</Text>
                 </TouchableOpacity>

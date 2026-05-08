@@ -71,6 +71,8 @@ export function SolicitarNFModal({ visible, onClose, onSubmit, tomador }: Solici
       translateY.value = withTiming(MODAL_HEIGHT, { duration: 300 });
       backdropOpacity.value = withTiming(0, { duration: 200 });
     }
+  // Reanimated shared values are stable refs and should not restart this effect.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   // Reset form ao abrir
@@ -78,6 +80,8 @@ export function SolicitarNFModal({ visible, onClose, onSubmit, tomador }: Solici
     if (visible) {
       resetForm();
     }
+  // Reset intentionally follows modal visibility only.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   const resetForm = () => {

@@ -151,6 +151,7 @@ export function Button({
       activeOpacity={0.7}
       style={[
         styles.button,
+        { borderRadius: borderRadius.md },
         getSizeStyles(),
         getVariantStyles(),
         fullWidth && styles.fullWidth,

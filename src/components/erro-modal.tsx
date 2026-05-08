@@ -70,6 +70,8 @@ export function ErroModal({
         useNativeDriver: true,
       }).start();
     }
+  // Animated values are stable refs created once for this modal instance.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   return (

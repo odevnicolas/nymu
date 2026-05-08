@@ -22,7 +22,6 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Ionicons } from '@expo/vector-icons';
 import { Tomador } from '@/lib/api/types';
 import { formatCPF, formatCNPJ, formatPhone, formatCEP } from '@/utils/validators';
 import { getTomadorById } from '@/lib/api/tomadores';
@@ -56,6 +55,8 @@ export function VisualizarDadosModal({ visible, onClose, tomador }: VisualizarDa
       translateY.value = withTiming(MODAL_HEIGHT, { duration: 300 });
       backdropOpacity.value = withTiming(0, { duration: 200 });
     }
+  // Reanimated shared values are stable refs; data reload follows the selected tomador.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, tomador?.id]);
 
   const loadTomadorData = async () => {

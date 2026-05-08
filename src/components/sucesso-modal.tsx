@@ -75,6 +75,8 @@ export function SucessoModal({
       scale.value = withTiming(0, { duration: 200 });
       opacity.value = withTiming(0, { duration: 200 });
     }
+  // Reanimated shared values and handleClose are stable for this modal lifecycle.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, autoCloseDelay]);
 
   const handleClose = () => {
